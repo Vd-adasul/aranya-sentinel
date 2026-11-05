@@ -1,0 +1,10 @@
+.git/
+inference_service/
+backend/
+*.db*
+*.zip
+venv/
+env/
+node_modules/
+.next/
+artifacts/
