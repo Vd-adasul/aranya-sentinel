@@ -3,8 +3,8 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useApp } from "@/lib/store";
-import { ReportItem } from "@/lib/types";
-import { getReports, generateReport, getFullMediaUrl, getDroneRecord } from "@/lib/api";
+import { ReportItem, EvidenceFusionData } from "@/lib/types";
+import { getReports, generateReport, getFullMediaUrl, getDroneRecord, getFusedEvidence } from "@/lib/api";
 import { getDroneMediaSync, getDroneMediaAsync } from "@/lib/mediaStorage";
 import { useSearchParams } from "next/navigation";
 import {
@@ -106,8 +106,24 @@ function ReportsContent() {
 
   const droneMissionId = selectedReport?.drone_mission_ref || relatedIncident?.drone_mission_ref;
 
+  const [fusion, setFusion] = useState<EvidenceFusionData | null>(null);
   const [plateDetections, setPlateDetections] = useState<any[]>([]);
   const [plateImageSrc, setPlateImageSrc] = useState<string | null>(null);
+  const [highResDroneSrc, setHighResDroneSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (selectedReport?.incident_id) {
+      getFusedEvidence(selectedReport.incident_id)
+        .then((f) => {
+          if (active && f) setFusion(f);
+        })
+        .catch(() => {});
+    }
+    return () => {
+      active = false;
+    };
+  }, [selectedReport?.incident_id]);
 
   useEffect(() => {
     let active = true;
@@ -138,7 +154,7 @@ function ReportsContent() {
     // Load full-resolution image asynchronously from IndexedDB
     getDroneMediaAsync(droneMissionId, selectedReport?.incident_id).then((src) => {
       if (active && src) {
-        setPlateImageSrc(src);
+        setHighResDroneSrc(src);
       }
     });
 
@@ -147,11 +163,28 @@ function ReportsContent() {
     };
   }, [droneMissionId, selectedReport?.incident_id]);
 
-  const droneImageSrc =
+  const droneLayer = fusion?.drone_layer;
+  const fusionTargets = droneLayer?.detected_targets || [];
+  const effectiveTargets =
+    plateDetections.length > 0
+      ? plateDetections
+      : fusionTargets.map((t) => ({
+          label: t.class,
+          confidence: t.conf,
+          box: t.box,
+        }));
+
+  const rawDroneImg =
+    droneLayer?.image_url ||
     plateImageSrc ||
+    selectedReport?.drone_image_url ||
+    (droneMissionId && droneMissionId.startsWith("DRONE-") ? `/api/drone/media/${droneMissionId}` : null);
+
+  const droneImageSrc =
+    highResDroneSrc ||
     getDroneMediaSync(droneMissionId, selectedReport?.incident_id) ||
+    getFullMediaUrl(rawDroneImg) ||
     (droneMissionId && droneMissionId.startsWith("DRONE-") ? `/imagery/drone_media/${droneMissionId}.jpg` : null) ||
-    (selectedReport?.drone_image_url ? getFullMediaUrl(selectedReport.drone_image_url) : null) ||
     (relatedIncident?.drone_mission_ref
       ? (relatedIncident.drone_mission_ref.startsWith("DRONE-")
           ? `/imagery/drone_media/${relatedIncident.drone_mission_ref}.jpg`
@@ -180,9 +213,11 @@ function ReportsContent() {
     const treeLossPct = relatedIncident?.tree_loss_pct ?? 49.0;
     const certScore = relatedIncident?.evidence_score ?? 94.5;
     const droneMission = selectedReport.drone_mission_ref || relatedIncident?.drone_mission_ref || "DRN-MSSN-101";
-    const machinerySummary = selectedReport.machinery_detected.length > 0
-      ? selectedReport.machinery_detected.join(" · ").toUpperCase()
-      : "AERIAL RECONNAISSANCE VERIFIED";
+    const machinerySummary = effectiveTargets.length > 0
+      ? Array.from(new Set(effectiveTargets.map((t: any) => t.label || t.class))).join(" · ").toUpperCase()
+      : (selectedReport.machinery_detected.length > 0
+          ? selectedReport.machinery_detected.join(" · ").toUpperCase()
+          : "AERIAL RECONNAISSANCE VERIFIED");
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -1141,7 +1176,7 @@ function ReportsContent() {
                             }}
                           />
                           {/* Dynamic High-Contrast Bounding Box Overlays */}
-                          {plateDetections.map((t, idx) => {
+                          {effectiveTargets.map((t: any, idx: number) => {
                             const box = t.box;
                             if (!box || box.length !== 4) return null;
                             const top = `${(box[0] * 100).toFixed(1)}%`;
@@ -1161,8 +1196,8 @@ function ReportsContent() {
                             );
                           })}
                           <div className="absolute top-2 right-2 px-2 py-0.5 bg-critical/90 text-white font-mono text-[9px] font-bold tracking-wider rounded border border-white/30 z-20 shadow">
-                            {plateDetections.length > 0
-                              ? `${plateDetections.length} TARGETS DETECTED`
+                            {effectiveTargets.length > 0
+                              ? `${effectiveTargets.length} TARGETS DETECTED`
                               : (selectedReport.machinery_detected.length > 0 ? `${selectedReport.machinery_detected.length} TARGETS DETECTED` : "OPTICAL FEED ATTESTED")}
                           </div>
                           <div className="absolute bottom-2 left-2 right-2 bg-ink-900/85 backdrop-blur-sm text-bone p-2 rounded text-[9px] font-mono flex items-center justify-between border-l-2 border-canopy z-20 shadow">
@@ -1191,11 +1226,13 @@ function ReportsContent() {
                         </div>
                       )}
                       <div className="p-3 text-[11px] text-ink-600 flex-1">
-                        {selectedReport.machinery_detected.length > 0
-                          ? `Aerial orthomosaic capture at 120m AGL. Machine learning bounding box model resolved active ${selectedReport.machinery_detected.join(", ")}.`
-                          : (droneImageSrc
-                              ? "Ultra-high-definition aerial orthomosaic verified. Zero unauthorized machinery targets detected in survey swath."
-                              : "Aerial drone reconnaissance has not yet been scheduled or uploaded for this legal boundary.")}
+                        {effectiveTargets.length > 0
+                          ? `Aerial orthomosaic capture at 120m AGL. Machine learning bounding box model resolved active ${Array.from(new Set(effectiveTargets.map((t: any) => t.label || t.class))).join(", ")}.`
+                          : (selectedReport.machinery_detected.length > 0
+                              ? `Aerial orthomosaic capture at 120m AGL. Machine learning bounding box model resolved active ${selectedReport.machinery_detected.join(", ")}.`
+                              : (droneImageSrc
+                                  ? "Ultra-high-definition aerial orthomosaic verified. Zero unauthorized machinery targets detected in survey swath."
+                                  : "Aerial drone reconnaissance has not yet been scheduled or uploaded for this legal boundary."))}
                       </div>
                     </div>
 
