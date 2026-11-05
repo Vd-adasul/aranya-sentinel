@@ -80,9 +80,11 @@ function VerificationContent() {
     };
   }, [activeInc?.drone_mission_ref, activeInc?.id]);
 
+  const droneMissionRef = activeInc?.drone_mission_ref;
   const droneImageSrc =
     highResDroneSrc ||
-    getDroneMediaSync(activeInc?.drone_mission_ref, activeInc?.id) ||
+    getDroneMediaSync(droneMissionRef, activeInc?.id) ||
+    (droneMissionRef && droneMissionRef.startsWith("DRONE-") ? `/imagery/drone_media/${droneMissionRef}.jpg` : null) ||
     getFullMediaUrl(rawDroneImg) ||
     "/imagery/drone-aerial-orthomosaic.jpg";
   const hasDroneEvidence = Boolean(

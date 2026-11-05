@@ -36,6 +36,9 @@ export function getFullMediaUrl(url?: string | null): string {
     const mediaId = match ? match[1] : null;
     const stored = getDroneMediaSync(mediaId);
     if (stored) return stored;
+    if (mediaId && mediaId.startsWith("DRONE-")) {
+      return `/imagery/drone_media/${mediaId}.jpg`;
+    }
     return "/imagery/drone-aerial-orthomosaic.jpg";
   }
 
@@ -55,6 +58,9 @@ export function getFullMediaUrl(url?: string | null): string {
       const mediaId = match ? match[1] : null;
       const stored = getDroneMediaSync(mediaId);
       if (stored) return stored;
+      if (mediaId && mediaId.startsWith("DRONE-")) {
+        return `/imagery/drone_media/${mediaId}.jpg`;
+      }
       return "/imagery/drone-aerial-orthomosaic.jpg";
     }
     return url;
@@ -64,6 +70,10 @@ export function getFullMediaUrl(url?: string | null): string {
     const mediaId = url.replace("/api/drone/media/", "").replace(".jpg", "").replace(".png", "");
     const stored = getDroneMediaSync(mediaId);
     if (stored) return stored;
+
+    if (mediaId && mediaId.startsWith("DRONE-")) {
+      return `/imagery/drone_media/${mediaId}.jpg`;
+    }
 
     if (isHttps && API_BASE.startsWith("http://")) {
       return "/imagery/drone-aerial-orthomosaic.jpg";

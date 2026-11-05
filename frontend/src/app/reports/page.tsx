@@ -150,10 +150,11 @@ function ReportsContent() {
   const droneImageSrc =
     plateImageSrc ||
     getDroneMediaSync(droneMissionId, selectedReport?.incident_id) ||
+    (droneMissionId && droneMissionId.startsWith("DRONE-") ? `/imagery/drone_media/${droneMissionId}.jpg` : null) ||
     (selectedReport?.drone_image_url ? getFullMediaUrl(selectedReport.drone_image_url) : null) ||
     (relatedIncident?.drone_mission_ref
       ? (relatedIncident.drone_mission_ref.startsWith("DRONE-")
-          ? getFullMediaUrl(`/api/drone/media/${relatedIncident.drone_mission_ref}`)
+          ? `/imagery/drone_media/${relatedIncident.drone_mission_ref}.jpg`
           : (relatedIncident.drone_mission_ref.toLowerCase().includes("agumbe") || relatedIncident.drone_mission_ref.toLowerCase().includes("101")
               ? "/imagery/drone-aerial-orthomosaic.jpg"
               : (relatedIncident.drone_mission_ref.toLowerCase().includes("102") ? "/imagery/terrain-regional.jpg" : null)))
