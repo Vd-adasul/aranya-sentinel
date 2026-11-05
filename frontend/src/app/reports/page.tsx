@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useApp } from "@/lib/store";
 import { ReportItem } from "@/lib/types";
 import { getReports, generateReport, getFullMediaUrl, getDroneRecord } from "@/lib/api";
+import { getDroneMediaSync, getDroneMediaAsync } from "@/lib/mediaStorage";
 import { useSearchParams } from "next/navigation";
 import {
   FileText,
@@ -109,9 +110,11 @@ function ReportsContent() {
   const [plateImageSrc, setPlateImageSrc] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
     if (droneMissionId && droneMissionId.startsWith("DRONE-")) {
       getDroneRecord(droneMissionId)
         .then((rec: any) => {
+          if (!active) return;
           if (rec) {
             if (rec.detections) {
               setPlateDetections(rec.detections);
@@ -122,29 +125,40 @@ function ReportsContent() {
           }
         })
         .catch(() => {
-          setPlateDetections([]);
-          setPlateImageSrc(null);
+          if (active) {
+            setPlateDetections([]);
+            setPlateImageSrc(null);
+          }
         });
     } else {
       setPlateDetections([]);
       setPlateImageSrc(null);
     }
-  }, [droneMissionId]);
+
+    // Load full-resolution image asynchronously from IndexedDB
+    getDroneMediaAsync(droneMissionId, selectedReport?.incident_id).then((src) => {
+      if (active && src) {
+        setPlateImageSrc(src);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [droneMissionId, selectedReport?.incident_id]);
 
   const droneImageSrc =
     plateImageSrc ||
+    getDroneMediaSync(droneMissionId, selectedReport?.incident_id) ||
     (selectedReport?.drone_image_url ? getFullMediaUrl(selectedReport.drone_image_url) : null) ||
-    (typeof window !== "undefined" && droneMissionId ? localStorage.getItem(`aranya_media_${droneMissionId}`) : null) ||
-    (typeof window !== "undefined" && selectedReport?.incident_id ? localStorage.getItem(`aranya_drone_media_${selectedReport.incident_id}`) : null) ||
-    (typeof window !== "undefined" && relatedIncident?.id ? localStorage.getItem(`aranya_drone_media_${relatedIncident.id}`) : null) ||
-    (typeof window !== "undefined" && droneMissionId?.startsWith("DRONE-") ? localStorage.getItem("aranya_latest_drone_image") : null) ||
     (relatedIncident?.drone_mission_ref
       ? (relatedIncident.drone_mission_ref.startsWith("DRONE-")
           ? getFullMediaUrl(`/api/drone/media/${relatedIncident.drone_mission_ref}`)
           : (relatedIncident.drone_mission_ref.toLowerCase().includes("agumbe") || relatedIncident.drone_mission_ref.toLowerCase().includes("101")
-              ? getFullMediaUrl("/imagery/drone-aerial-orthomosaic.jpg")
-              : (relatedIncident.drone_mission_ref.toLowerCase().includes("102") ? getFullMediaUrl("/imagery/terrain-regional.jpg") : null)))
-      : null);
+              ? "/imagery/drone-aerial-orthomosaic.jpg"
+              : (relatedIncident.drone_mission_ref.toLowerCase().includes("102") ? "/imagery/terrain-regional.jpg" : null)))
+      : null) ||
+    "/imagery/drone-aerial-orthomosaic.jpg";
 
   const handlePrintDossier = () => {
     if (!selectedReport) return;
@@ -1118,6 +1132,12 @@ function ReportsContent() {
                             src={droneImageSrc}
                             alt="Drone Reconnaissance Footage"
                             className="w-full h-full object-cover object-center"
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              if (!target.src.includes("/imagery/drone-aerial-orthomosaic.jpg")) {
+                                target.src = "/imagery/drone-aerial-orthomosaic.jpg";
+                              }
+                            }}
                           />
                           {/* Dynamic High-Contrast Bounding Box Overlays */}
                           {plateDetections.map((t, idx) => {

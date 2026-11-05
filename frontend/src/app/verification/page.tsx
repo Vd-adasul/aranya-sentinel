@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useSearchParams } from "next/navigation";
 import { useApp } from "@/lib/store";
 import { getFusedEvidence, getFullMediaUrl } from "@/lib/api";
+import { getDroneMediaSync, getDroneMediaAsync } from "@/lib/mediaStorage";
 import { EvidenceFusionData } from "@/lib/types";
 import {
   GitMerge,
@@ -67,11 +68,23 @@ function VerificationContent() {
               : (activeInc.drone_mission_ref.toLowerCase().includes("102") ? "/imagery/terrain-regional.jpg" : null)))
       : null
   );
+  const [highResDroneSrc, setHighResDroneSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    getDroneMediaAsync(activeInc?.drone_mission_ref, activeInc?.id).then((src) => {
+      if (active && src) setHighResDroneSrc(src);
+    });
+    return () => {
+      active = false;
+    };
+  }, [activeInc?.drone_mission_ref, activeInc?.id]);
+
   const droneImageSrc =
-    (typeof window !== "undefined" && activeInc?.drone_mission_ref ? localStorage.getItem(`aranya_media_${activeInc.drone_mission_ref}`) : null) ||
-    (typeof window !== "undefined" && activeInc?.id ? localStorage.getItem(`aranya_drone_media_${activeInc.id}`) : null) ||
-    (typeof window !== "undefined" && activeInc?.drone_mission_ref?.startsWith("DRONE-") ? localStorage.getItem("aranya_latest_drone_image") : null) ||
-    getFullMediaUrl(rawDroneImg);
+    highResDroneSrc ||
+    getDroneMediaSync(activeInc?.drone_mission_ref, activeInc?.id) ||
+    getFullMediaUrl(rawDroneImg) ||
+    "/imagery/drone-aerial-orthomosaic.jpg";
   const hasDroneEvidence = Boolean(
     (activeInc?.drone_mission_ref || droneLayer?.drone_id) &&
     (droneImageSrc || detectedTargets.length > 0)
@@ -313,6 +326,12 @@ function VerificationContent() {
                       src={droneImageSrc}
                       alt="High-resolution Drone Orthomosaic Reconnaissance"
                       className="w-full h-full object-cover object-center"
+                      onError={(e) => {
+                        const target = e.currentTarget as HTMLImageElement;
+                        if (!target.src.includes("/imagery/drone-aerial-orthomosaic.jpg")) {
+                          target.src = "/imagery/drone-aerial-orthomosaic.jpg";
+                        }
+                      }}
                     />
                     <div className="absolute inset-0 bg-black/10" />
 

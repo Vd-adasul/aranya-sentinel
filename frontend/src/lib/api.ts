@@ -19,36 +19,58 @@ import {
   INITIAL_DISTURBANCES,
   INITIAL_REPORTS,
 } from "./data";
+import { saveDroneMedia, getDroneMediaSync } from "./mediaStorage";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 const MODAL_INFERENCE_URL = "https://vidhyadhar-adasul--aranya-sentinel-inference-fastapi-app.us-east.modal.run";
 
 export function getFullMediaUrl(url?: string | null): string {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("blob:") || url.startsWith("data:")) {
-    // If it's a blob: URL, check if there's a permanent base64 stored before using it (since blob: URLs can be revoked)
-    if (url.startsWith("blob:") && typeof window !== "undefined") {
-      const latest = localStorage.getItem("aranya_latest_drone_image");
-      if (latest && latest.startsWith("data:")) return latest;
+  if (!url) return "/imagery/drone-aerial-orthomosaic.jpg";
+
+  const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
+  const isLocalBackendUrl = url.includes("127.0.0.1:8000") || url.includes("localhost:8000");
+
+  // Prevent mixed content error when browsing on HTTPS
+  if (isLocalBackendUrl && isHttps) {
+    const match = url.match(/\/api\/drone\/media\/([^\/?#.]+)/);
+    const mediaId = match ? match[1] : null;
+    const stored = getDroneMediaSync(mediaId);
+    if (stored) return stored;
+    return "/imagery/drone-aerial-orthomosaic.jpg";
+  }
+
+  if (url.startsWith("blob:") && typeof window !== "undefined") {
+    const stored = getDroneMediaSync();
+    if (stored && stored.startsWith("data:")) return stored;
+    return url;
+  }
+
+  if (url.startsWith("data:")) {
+    return url;
+  }
+
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    if (isHttps && url.startsWith("http://")) {
+      const match = url.match(/\/api\/drone\/media\/([^\/?#.]+)/);
+      const mediaId = match ? match[1] : null;
+      const stored = getDroneMediaSync(mediaId);
+      if (stored) return stored;
+      return "/imagery/drone-aerial-orthomosaic.jpg";
     }
     return url;
   }
+
   if (url.startsWith("/api/drone/media/")) {
     const mediaId = url.replace("/api/drone/media/", "").replace(".jpg", "").replace(".png", "");
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(`aranya_media_${mediaId}`);
-      if (stored) return stored;
-      const latest = localStorage.getItem("aranya_latest_drone_image");
-      if (latest && mediaId.startsWith("DRONE-")) return latest;
-    }
-    // Prevent mixed content error when browsing on HTTPS
-    if (typeof window !== "undefined" && window.location.protocol === "https:" && API_BASE.startsWith("http://")) {
-      const latest = localStorage.getItem("aranya_latest_drone_image");
-      if (latest) return latest;
+    const stored = getDroneMediaSync(mediaId);
+    if (stored) return stored;
+
+    if (isHttps && API_BASE.startsWith("http://")) {
       return "/imagery/drone-aerial-orthomosaic.jpg";
     }
     return `${API_BASE}${url}`;
   }
+
   return url;
 }
 
@@ -323,70 +345,26 @@ export async function runDroneDetection(
     };
   }
 
-  // Persist the result and uploaded image to local storage for instant multi-page synchronization
+  // Persist the result and uploaded image using robust dual-storage (IndexedDB + localStorage thumbnail)
   if (typeof window !== "undefined" && result) {
     try {
-      let dataUrl: string | null = null;
+      let savedMedia = { fullUrl: "", thumbUrl: "" };
       if (file) {
         try {
-          dataUrl = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const src = ev.target?.result as string;
-              if (typeof window === "undefined" || !src) {
-                resolve(src || "");
-                return;
-              }
-              const img = new Image();
-              img.onload = () => {
-                const maxDim = 1200;
-                let w = img.width;
-                let h = img.height;
-                if (w > maxDim || h > maxDim) {
-                  if (w > h) {
-                    h = Math.round((h * maxDim) / w);
-                    w = maxDim;
-                  } else {
-                    w = Math.round((w * maxDim) / h);
-                    h = maxDim;
-                  }
-                }
-                const canvas = document.createElement("canvas");
-                canvas.width = w;
-                canvas.height = h;
-                const ctx = canvas.getContext("2d");
-                if (ctx) {
-                  ctx.drawImage(img, 0, 0, w, h);
-                  resolve(canvas.toDataURL("image/jpeg", 0.86));
-                  return;
-                }
-                resolve(src);
-              };
-              img.onerror = () => resolve(src);
-              img.src = src;
-            };
-            reader.onerror = () => resolve("");
-            reader.readAsDataURL(file);
-          });
-        } catch (e) {
-          console.warn("Base64 encode error:", e);
-        }
-
-        if (dataUrl) {
-          try {
-            localStorage.setItem(`aranya_media_${result.media_id}`, dataUrl);
-            localStorage.setItem("aranya_latest_drone_image", dataUrl);
-            if (incidentId) {
-              localStorage.setItem(`aranya_drone_media_${incidentId}`, dataUrl);
-            }
-          } catch (storageErr) {
-            console.warn("Storage quota warning for full dataUrl:", storageErr);
+          savedMedia = await saveDroneMedia(result.media_id, file, incidentId);
+          if (savedMedia.thumbUrl || savedMedia.fullUrl) {
+            result.image_url = savedMedia.thumbUrl || savedMedia.fullUrl;
           }
-          result.image_url = dataUrl;
+        } catch (mediaErr) {
+          console.warn("saveDroneMedia warning:", mediaErr);
         }
       }
 
-      localStorage.setItem(`aranya_drone_record_${result.media_id}`, JSON.stringify(result));
+      try {
+        localStorage.setItem(`aranya_drone_record_${result.media_id}`, JSON.stringify(result));
+      } catch (e) {
+        console.warn("Storage quota warning for drone record:", e);
+      }
 
       const targetIncId = incidentId || "AS-2026-088";
       const incIdx = cachedIncidents.findIndex((i) => i.id === targetIncId);
@@ -398,8 +376,12 @@ export async function runDroneDetection(
           evidence_count: result.detections.length,
         };
       }
-      localStorage.setItem("aranya_cached_incidents", JSON.stringify(cachedIncidents));
-      localStorage.setItem(`aranya_incident_drone_${targetIncId}`, result.media_id);
+      try {
+        localStorage.setItem("aranya_cached_incidents", JSON.stringify(cachedIncidents));
+        localStorage.setItem(`aranya_incident_drone_${targetIncId}`, result.media_id);
+      } catch (e) {
+        console.warn("Quota warning for cached incidents:", e);
+      }
 
       // Synthesize/update corresponding report item so /reports immediately exhibits this sortie
       const existingRepIdx = cachedReports.findIndex((r) => r.incident_id === targetIncId);
@@ -418,7 +400,7 @@ export async function runDroneDetection(
         sha256_evidence_seal: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         download_url: `/api/reports/download/${targetIncId}`,
         drone_mission_ref: result.media_id,
-        drone_image_url: dataUrl || result.image_url,
+        drone_image_url: savedMedia.thumbUrl || result.image_url || "/imagery/drone-aerial-orthomosaic.jpg",
       };
       if (existingRepIdx !== -1) {
         cachedReports[existingRepIdx] = {

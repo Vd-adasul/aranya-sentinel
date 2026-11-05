@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DroneDetectionResult, BoundingBox, DroneSampleMission } from "@/lib/types";
 import { runDroneDetection, getFullMediaUrl, getDroneRecord } from "@/lib/api";
+import { saveDroneMedia } from "@/lib/mediaStorage";
 import { useApp } from "@/lib/store";
 import {
   Crosshair,
@@ -380,23 +381,11 @@ export function DroneCanvas({
     setUploadedFile(file);
     setInferenceError(null);
 
-    // Read and save as persistent Base64 Data URL so it never dies on navigation/refresh
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      if (dataUrl) {
-        setBgImageSrc(dataUrl);
-        try {
-          localStorage.setItem("aranya_latest_drone_image", dataUrl);
-          if (incidentId) {
-            localStorage.setItem(`aranya_drone_media_${incidentId}`, dataUrl);
-          }
-        } catch (err) {
-          console.warn("Storage quota note:", err);
-        }
-      }
-    };
-    reader.readAsDataURL(file);
+    // Save with robust IndexedDB + compact thumbnail cache to prevent QuotaExceededError
+    saveDroneMedia("pending_drone_upload", file, incidentId).then(({ fullUrl, thumbUrl }) => {
+      const best = fullUrl || thumbUrl;
+      if (best) setBgImageSrc(best);
+    });
 
     setIsInferencing(true);
     const formData = new FormData();
