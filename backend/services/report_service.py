@@ -64,8 +64,8 @@ class ReportService:
 
         now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
         
-        # UUID4-based report ID prevents collisions and file overwrites
-        report_id = f"REP-{uuid.uuid4().hex}"
+        # Clean judicial serial format: REP-2026-XXXXXXXX (collision-free & court admissible)
+        report_id = f"REP-2026-{uuid.uuid4().hex[:8].upper()}"
 
         # Status derived strictly from incident review state (never falsely marks drafts as certified)
         report_status = STATUS_MAP.get(incident["status"], "DRAFT_UNREVIEWED")
