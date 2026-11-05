@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+.env.local
+.env.*.local
+venv/
+env/
+ENV/
+.pytest_cache/
+
+# Large weights and local sqlite (handled on Modal and Supabase)
+inference_service/weights/
+backend/aranya_sentinel.db*
+backend.zip
+
+# External references and screenshots
+references/
+.hallmark/
+screenshots/
+
+# System
+.DS_Store
+Thumbs.db
+*.log

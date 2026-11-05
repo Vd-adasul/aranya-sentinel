@@ -1,0 +1,1713 @@
+Yes. I've revised the approach. The previous version mentioned the skills, but I hadn't mapped them tightly enough to the individual engineering activities.
+
+I've also reviewed your newly supplied Antigravity skill catalogue. This version uses the skills actually listed there, rather than assuming that additional skills are installed.
+
+Three important improvements:
+
+1. Every relevant skill is placed alongside the development phase where Antigravity should use it.
+2. The frontend now has a proper visual and interaction specification, including the command centre, map, navigation, incident workspace, colour system, typography and responsive behaviour.
+3. Antigravity is instructed not to invoke every skill unnecessarily. It must select skills based on the work being performed.
+
+Use this as a replacement for the previous master prompt, not as an additional prompt to append to it.
+
+# ARANYA SENTINEL
+
+# MASTER AUTONOMOUS ENGINEERING SPECIFICATION
+
+## AI-Powered Illegal Deforestation Detection and Forest Intelligence Platform
+
+---
+
+# 1. PROJECT OBJECTIVE
+
+You are responsible for architecting, engineering, implementing, testing and deploying a complete AI-powered forest intelligence platform called **Aranya Sentinel**.
+
+Official Hackathon Problem Statement:
+
+**Illegal Deforestation Detection**
+
+Design a computer vision pipeline that processes drone and satellite feeds to detect and alert authorities about illegal encroachment on forest land.
+
+The application must go considerably beyond a basic image-classification demonstration.
+
+Build a complete intelligence system that combines:
+
+- Satellite-based forest monitoring.
+- Drone image and video processing.
+- Pretrained computer vision models.
+- Temporal forest-cover change detection.
+- Geospatial intelligence.
+- Protected-area geofencing.
+- Detection prioritisation.
+- Satellite and drone evidence correlation.
+- Human verification.
+- Automated alerts.
+- Evidence management.
+- Investigation reports.
+- AI-assisted querying and analysis.
+
+The objective is to demonstrate how a technology platform can identify potential forest disturbances, prioritise investigations, collect evidence and assist authorities in responding to suspicious activities.
+
+The final product should feel like a real environmental intelligence platform, not a generic SaaS dashboard.
+
+## Non-negotiable constraints
+
+1. Use existing pretrained models. Do not fine-tune or train models.
+2. Prefer lightweight pretrained models appropriate for the available hardware.
+3. Use genuine satellite observations and real AI inference wherever possible.
+4. Do not invent detections or display synthetic data as real incidents.
+5. Make all important features functional rather than merely present in the UI.
+6. Build the actual application, not just architecture documentation.
+7. Maintain engineering quality and a consistent design system.
+8. Keep the architecture modular and independently deployable.
+
+---
+
+# 2. ANTIGRAVITY DEVELOPMENT RULES AND SKILL USAGE
+
+I have an existing global skills library installed in Antigravity.
+
+You must use these skills where they are relevant to the current task.
+
+Do not treat the skill catalogue as a list of commands that must all be executed simultaneously.
+
+Before beginning a major task:
+
+1. Identify the relevant engineering activity.
+2. Select the skill or skills that specifically help with that activity.
+3. Read their instructions where necessary.
+4. Invoke them using their installed skill names.
+5. Apply their methodology to the actual implementation.
+
+If a skill is already activated automatically, do not invoke it repeatedly.
+
+If a skill cannot be found or activated, report that accurately and continue using sound engineering practices.
+
+Never invent a skill name or assume a skill exists simply because a previous project used it.
+
+## 2.1 Initial project setup
+
+**Use `/using-superpowers`**
+
+Activate this at the beginning to establish the appropriate skill-driven engineering workflow.
+
+**Use `/brainstorming`**
+
+This is required before designing new functionality, creating major features, introducing new components or changing application behaviour.
+
+Use it to think through the architecture and the user's actual problem before committing to implementation decisions.
+
+**Use `/writing-plans`**
+
+Before touching the implementation, create a detailed engineering plan containing:
+
+- Development phases.
+- Dependencies.
+- Technical architecture.
+- Feature breakdown.
+- Acceptance criteria.
+- Testing approach.
+- Deployment milestones.
+
+Do not start coding blindly.
+
+**Use `/repomix-explorer`**
+
+Use when the current repository is large or unfamiliar and a structured codebase overview would help.
+
+Use it to understand existing architecture, component structure, reusable services and existing functionality.
+
+Do not use it unnecessarily for simple file-level inspection or implementation tasks.
+
+## 2.2 Engineering execution
+
+**Use `/executing-plans`**
+
+Use when implementing the approved engineering plan.
+
+Maintain progress and verify each development phase.
+
+**Use `/test-driven-development`**
+
+Use before implementing meaningful features and bug fixes.
+
+Follow the red-green-refactor approach.
+
+Prioritise testing for:
+
+- Authentication.
+- Database operations.
+- Geospatial processing.
+- Satellite change detection.
+- Model inference.
+- File processing.
+- Incident management.
+- Evidence generation.
+
+**Use `/dispatching-parallel-agents`**
+
+Use when multiple tasks are genuinely independent and can be implemented without conflicting changes.
+
+Examples:
+
+- Independent frontend development.
+- Independent backend API development.
+- Independent geospatial integration.
+- Independent model-inference service development.
+- Independent testing and documentation.
+
+**Use `/subagent-driven-development`**
+
+Use when carrying out a multi-stage implementation plan with delegated independent development tasks.
+
+Define interfaces and expected deliverables before delegating.
+
+Do not allow multiple agents to modify shared architectural foundations without coordination.
+
+**Use `/using-git-worktrees`**
+
+Use when parallel development requires isolated worktrees or when beginning substantial work that could otherwise disrupt existing work.
+
+**Use `/systematic-debugging`**
+
+Use whenever a bug, failed test, incorrect result or unexpected behaviour occurs.
+
+Do not guess at fixes. Identify the root cause, verify the hypothesis and test the correction.
+
+**Use `/receiving-code-review`**
+
+Use when reviewing feedback from other agents or reviewers.
+
+Check whether the feedback is technically correct before accepting it.
+
+**Use `/requesting-code-review`**
+
+Use after major features or substantial integration work.
+
+Request reviews of architecture, correctness, performance, maintainability and security.
+
+**Use `/verification-before-completion`**
+
+This must be used before declaring any important feature, phase or deployment complete.
+
+Verify actual test results and runtime behaviour.
+
+**Use `/finishing-a-development-branch`**
+
+Use when a development branch has been completed and the tests pass, before deciding how to integrate or clean up the branch.
+
+## 2.3 Frontend and visual design
+
+The following skills are particularly important for this project.
+
+**Use `/brainstorming`**
+
+Before designing the UI, explore possible layouts, workflows and visual approaches.
+
+**Use `/brand`**
+
+Use when establishing the Aranya Sentinel identity.
+
+Define the platform's visual identity, brand voice, logo direction, terminology and visual consistency.
+
+**Use `/hallmark`**
+
+Use for building the landing page and new application pages.
+
+The goal is to make the website look professionally designed rather than AI-generated.
+
+Pay particular attention to editorial composition, visual hierarchy, layout consistency and distinctive design decisions.
+
+**Use `/ui-ux-pro-max`**
+
+Use when researching and defining the overall application design.
+
+Consider:
+
+- Design styles.
+- Colour systems.
+- Typography combinations.
+- Component patterns.
+- Data visualisation.
+- Maps.
+- Accessibility.
+- Interaction patterns.
+- Responsive layouts.
+
+Use its design intelligence to make deliberate decisions rather than choosing arbitrary styles.
+
+**Use `/impeccable`**
+
+Use for detailed UX and interface refinement.
+
+Apply it to:
+
+- Command centre design.
+- Map experience.
+- Incident-review workspace.
+- Forms.
+- Tables.
+- Empty states.
+- Loading states.
+- Navigation.
+- Responsive behaviour.
+- Accessibility.
+- Micro-interactions.
+
+Use it again when conducting a frontend design audit.
+
+**Use `/design-system`**
+
+Use to establish the formal design-token architecture.
+
+Define primitive, semantic and component-level tokens.
+
+Produce consistent specifications for spacing, typography, colours, surfaces, borders and interaction states.
+
+Maintain a DESIGN.md document describing the system.
+
+**Use `/ui-styling`**
+
+Use during actual UI implementation.
+
+Build accessible, reusable components with Tailwind CSS and shadcn/ui/Radix patterns.
+
+**Use `/vercel-react-best-practices`**
+
+Use whenever implementing or reviewing Next.js and React components.
+
+Pay attention to rendering performance, data fetching, hydration, component boundaries, bundle size and unnecessary re-renders.
+
+## 2.4 Conditional skills
+
+**Use `/permissioned-github`** only when GitHub operations require additional permissions or the current development environment blocks an operation.
+
+**Use `/diagnosing-superpowers`** only if a skill-driven session repeatedly fails, skips required work or develops workflow problems.
+
+Do not invoke unrelated skills for routine development.
+
+In particular, do not invoke banner-design, slides, automation or generative UI merely because these skills exist.
+
+### Skill execution rule
+
+The objective is to apply skills at the correct engineering stage, not maximise the number of skill invocations.
+
+Maintain a small record of which relevant skills were used and why.
+
+---
+
+# 3. EXISTING INFRASTRUCTURE
+
+Use the connected infrastructure already available.
+
+Do not replace these services unnecessarily.
+
+## Frontend — Vercel
+
+Preferred stack:
+
+- Next.js App Router.
+- React.
+- TypeScript.
+- Tailwind CSS.
+- shadcn/ui.
+- Radix UI.
+- Framer Motion, selectively.
+- MapLibre GL JS or Leaflet.
+- Recharts.
+- TanStack Query where appropriate.
+
+Vercel will host the frontend.
+
+## Database and authentication — Supabase
+
+Use:
+
+- PostgreSQL.
+- PostGIS.
+- Supabase Auth.
+- Supabase Storage.
+- Row Level Security.
+- Realtime.
+
+Use object storage for large evidence files and raster assets.
+
+Use PostGIS for geographic information and spatial queries.
+
+## Backend — Render
+
+Use:
+
+- Python.
+- FastAPI.
+- Modular service architecture.
+- Background processing.
+- Asynchronous jobs.
+- Geospatial libraries.
+
+The backend must handle satellite integrations, processing orchestration, detection records, notifications, reports and business logic.
+
+Do not place heavy model inference inside ordinary frontend serverless routes.
+
+## AI model hosting — Hugging Face
+
+Host the required pretrained inference services on Hugging Face.
+
+Keep model execution independent of the main backend.
+
+Use authenticated APIs for communication.
+
+Verify actual compute entitlement, hardware availability and runtime constraints before deploying.
+
+---
+
+# 4. PRETRAINED MODEL ARCHITECTURE
+
+The project must use existing pretrained weights.
+
+Do not fine-tune.
+
+## 4.1 Grounding DINO Tiny
+
+Official repository:
+
+[https://huggingface.co/IDEA-Research/grounding-dino-tiny](https://huggingface.co/IDEA-Research/grounding-dino-tiny)
+
+Role:
+
+Zero-shot object detection on drone photographs and video frames.
+
+Target categories:
+
+- Trucks.
+- Excavators.
+- Bulldozers.
+- Logging machinery.
+- Timber piles.
+- Construction equipment.
+- Vehicles near suspected clearing.
+- Other relevant visible objects.
+
+Use natural-language prompts.
+
+Return bounding boxes and confidence values.
+
+Do not assume that the model is specifically trained for illegal logging detection.
+
+Small aerial objects may be difficult to detect reliably.
+
+## 4.2 SAM 2 Hiera Small
+
+Official repository:
+
+[https://huggingface.co/facebook/sam2-hiera-small](https://huggingface.co/facebook/sam2-hiera-small)
+
+Role:
+
+Promptable image and video segmentation.
+
+Use bounding-box prompts from Grounding DINO to produce segmentation masks.
+
+Display the masks over the original drone image.
+
+Where practical, use video segmentation and object tracking.
+
+## 4.3 Dynamic World
+
+Official documentation:
+
+[https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_DYNAMICWORLD_V1](https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_DYNAMICWORLD_V1)
+
+Role:
+
+Satellite land-cover analysis.
+
+Use its 10-metre land-cover probability observations as the foundation for satellite-based forest monitoring.
+
+Important classes:
+
+- Trees.
+- Grass.
+- Crops.
+- Shrub and scrub.
+- Flooded vegetation.
+- Built area.
+- Bare ground.
+- Water.
+- Snow and ice.
+
+Track the probability of tree cover over time.
+
+Compare it with alternative land-cover probabilities.
+
+Use seasonal baselines, temporal persistence and supporting spectral indicators.
+
+Dynamic World is an already-inferred geospatial data product, not an additional model that we need to fine-tune.
+
+## 4.4 Optional Prithvi-EO-2.0
+
+[https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-2.0-300M](https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-2.0-300M)
+
+Investigate only when a genuinely useful pretrained downstream inference workflow is available without fine-tuning.
+
+Do not make the base foundation-model checkpoint the main deforestation classifier.
+
+Do not download unnecessary large models.
+
+## 4.5 Hardware constraints
+
+Initial target:
+
+Hugging Face CPU Basic hardware, subject to verified account access.
+
+- 2 vCPU.
+- 16 GB RAM.
+- 50 GB disk.
+- No dedicated GPU assumed.
+
+Implement resource-aware model loading, inference, concurrency and image sizing.
+
+Do not reload weights for every request.
+
+Process videos asynchronously.
+
+Do not promise real-time high-resolution video analysis on CPU hardware.
+
+---
+
+# 5. CORE DETECTION SYSTEM
+
+Build two connected pipelines.
+
+## PIPELINE A — SATELLITE FOREST MONITORING
+
+Implement:
+
+1. Area-of-interest selection.
+2. Sentinel-2 data integration.
+3. Dynamic World observation retrieval.
+4. Image preprocessing.
+5. Cloud and shadow handling.
+6. Temporal comparison.
+7. Vegetation-index calculation.
+8. Tree-probability analysis.
+9. Candidate disturbance identification.
+10. Spatial filtering.
+11. Raster-to-polygon conversion.
+12. Area calculation.
+13. Geofencing.
+14. Incident creation.
+
+Use suitable indicators:
+
+- NDVI.
+- NBR.
+- NDMI.
+- Dynamic World tree probability.
+- Bare-ground probability.
+- Built-area probability.
+
+Do not use a single indicator as proof of deforestation.
+
+Require sufficiently comparable observations and temporal persistence.
+
+Distinguish:
+
+- Suspected vegetation loss.
+- Possible forest clearing.
+- Agricultural conversion.
+- Possible construction encroachment.
+- Fire-related disturbance.
+- Uncertain seasonal changes.
+
+## PIPELINE B — DRONE INTELLIGENCE
+
+Implement:
+
+1. Image upload.
+2. Video upload.
+3. Metadata extraction.
+4. Frame sampling.
+5. Grounding DINO inference.
+6. Bounding-box generation.
+7. SAM 2 segmentation.
+8. Video tracking where supported.
+9. Geographic metadata processing.
+10. Evidence generation.
+11. Incident association.
+
+Preserve original images and model-generated outputs.
+
+Do not invent geographic coordinates.
+
+Where location information is missing, mark the detection as unlocated or request manual placement.
+
+## EVIDENCE FUSION
+
+Create an interface that links satellite and drone observations when their geographic positions and timestamps support a genuine association.
+
+Display:
+
+- Satellite disturbance polygon.
+- Drone detections.
+- Distance between observations and the disturbance.
+- Observation dates.
+- Evidence sources.
+- Relevant model outputs.
+
+This is a major differentiating capability.
+
+---
+
+# 6. EXTERNAL DATA AND GEOFENCING
+
+Investigate and integrate suitable external sources.
+
+Global Forest Watch:
+
+[https://www.globalforestwatch.org/](https://www.globalforestwatch.org/)
+
+API documentation:
+
+[https://data-api.globalforestwatch.org/docs](https://data-api.globalforestwatch.org/docs)
+
+Investigate relevant GLAD, GLAD-S2, RADD and integrated forest-disturbance alert layers.
+
+Check authentication, licensing, rate limits and availability.
+
+Maintain the external source identity on every observation.
+
+Support importing protected-area boundaries from authoritative and verifiable sources.
+
+Support GeoJSON, KML and shapefile-based geographic data.
+
+Use PostGIS for:
+
+- Polygon intersections.
+- Spatial containment.
+- Proximity calculations.
+- Geographic filtering.
+- Area calculation.
+
+Never state that a location is legally protected without supporting boundary information.
+
+---
+
+# 7. INCIDENT MANAGEMENT AND EVIDENCE
+
+Create a complete incident-management system.
+
+Every incident should include:
+
+- Unique ID.
+- Detection date.
+- Location.
+- Coordinates.
+- Polygon.
+- Affected area.
+- Detection source.
+- Severity.
+- Model confidence.
+- Evidence quality.
+- Protected-area relationship.
+- Historical observations.
+- Drone evidence.
+- External corroboration.
+- Review status.
+- Reviewer information.
+- Investigation history.
+
+Use the following states:
+
+- New.
+- Under review.
+- Verified.
+- Rejected.
+- Escalated.
+- Resolved.
+
+Implement spatial and temporal alert deduplication.
+
+Allow human reviewers to add explanations and rejection reasons.
+
+Generate professional PDF investigation reports.
+
+Preserve evidence hashes, source metadata, processing history and audit records.
+
+Use SHA-256 for evidence integrity.
+
+Do not build blockchain merely for presentation.
+
+---
+
+# 8. NOTIFICATIONS AND ALERTS
+
+Implement:
+
+- In-app notifications.
+- Email notifications.
+- Optional Telegram integration.
+- Optional SMS.
+- Optional WhatsApp.
+
+Do not fabricate successful deliveries.
+
+Use configurable provider integrations.
+
+Implement:
+
+- Severity-based notification rules.
+- Duplicate prevention.
+- Escalation.
+- Assignment.
+- Acknowledgement.
+- Resolution.
+- Notification history.
+
+Maintain reliable in-app notifications even when external services are unavailable.
+
+---
+
+# 9. FRONTEND DESIGN SPECIFICATION
+
+This section is extremely important.
+
+Do not create a generic dashboard using the standard AI-generated SaaS layout.
+
+The application should look like a sophisticated geospatial intelligence and environmental monitoring product.
+
+The overall design direction is:
+
+**A premium environmental intelligence command centre combining the visual clarity of a professional GIS platform with the usability of a modern enterprise investigation tool.**
+
+It should feel credible, technically sophisticated and carefully designed.
+
+## 9.1 Required design process and skills
+
+Before implementation:
+
+- Use `/brainstorming` to explore the visual direction.
+- Use `/brand` to establish Aranya Sentinel's identity.
+- Use `/hallmark` to guide the design of the landing page and new pages.
+- Use `/ui-ux-pro-max` to identify appropriate visual styles, typography, component patterns and chart conventions.
+- Use `/design-system` to establish the formal design tokens.
+- Use `/impeccable` to refine interaction design, information hierarchy and individual page layouts.
+- Use `/ui-styling` during implementation.
+- Use `/vercel-react-best-practices` during React and Next.js development.
+
+Do not invoke these repeatedly for minor changes.
+
+## 9.2 Brand identity
+
+Platform name:
+
+ARANYA SENTINEL
+
+Brand idea:
+
+Intelligence for the protection of forests.
+
+Visual personality:
+
+- Precise.
+- Trustworthy.
+- Scientific.
+- Environmental.
+- Operational.
+- Modern.
+- Calm but authoritative.
+
+Avoid childish environmental illustrations, cartoon trees, excessive leaves and generic AI imagery.
+
+Use environmental imagery selectively.
+
+The visual identity should be recognisable even without the logo.
+
+## 9.3 Colour system
+
+Develop a cohesive palette.
+
+Suggested direction:
+
+Primary forest green: #183D30
+
+Deep forest: #102A22
+
+Secondary green: #527A63
+
+Muted sage: #A9BDAA
+
+Warm background: #F5F6F1
+
+Surface: #FFFFFF
+
+Primary text: #202923
+
+Secondary text: #68756B
+
+Border: #E3E8E0
+
+Warning amber: #D49A35
+
+Critical red: #C7544D
+
+Information blue: #5486AC
+
+These are starting design tokens, not mandatory values.
+
+Refine the final system through the design skills.
+
+Use semantic colours consistently.
+
+Green should represent forest-related themes and verified positive states.
+
+Amber should represent warnings and review-required events.
+
+Red should be reserved for critical incidents.
+
+Do not turn every dashboard element into a coloured status badge.
+
+## 9.4 Typography
+
+Use a restrained, professional typographic hierarchy.
+
+Select a high-quality sans-serif family for the interface.
+
+Use a clear and readable font for tables and analytical values.
+
+Use tabular numerals for metrics.
+
+Use typography intentionally:
+
+- Large, confident page headings.
+- Smaller, quieter supporting labels.
+- Clear section headings.
+- Readable body text.
+- Consistent numeric alignment.
+- Legible map and data labels.
+
+Avoid excessive font sizes and oversized dashboard titles.
+
+## 9.5 Application shell
+
+The main application should have a persistent desktop navigation shell.
+
+### Left sidebar
+
+Approximately 240–256 pixels wide on a standard desktop.
+
+Include:
+
+- Aranya Sentinel logo and name.
+- Command Centre.
+- Live Intelligence Map.
+- Satellite Monitoring.
+- Drone Intelligence.
+- Incidents.
+- Verification Queue.
+- Analytics.
+- Reports.
+- Public Portal.
+- Administration.
+
+Group navigation items logically.
+
+Use precise icons and short labels.
+
+The sidebar should have:
+
+- Clear active navigation.
+- Subtle hover states.
+- Optional collapse behaviour.
+- Consistent icon alignment.
+- A user/account area at the bottom.
+
+Do not make the navigation visually dominant over the main content.
+
+### Top navigation bar
+
+Include:
+
+- Current page context.
+- Geographic jurisdiction selector.
+- Global search.
+- Notification centre.
+- Data/system health status.
+- User profile.
+- Date/time context where useful.
+
+The global search should support finding incidents and monitored areas.
+
+### Main content
+
+Use an appropriate responsive grid.
+
+Maintain consistent horizontal and vertical spacing.
+
+Avoid overloading every page with cards.
+
+Prioritise the main operational task of that page.
+
+## 9.6 Landing page
+
+The landing page should be visually impressive.
+
+Use `/hallmark`, `/brand` and `/impeccable` during its design and review.
+
+### Hero section
+
+Create a strong full-width or carefully contained hero composition.
+
+Use high-quality aerial forest imagery.
+
+Use a subtle dark overlay where necessary.
+
+Suggested headline:
+
+**See forest change before it becomes irreversible.**
+
+Supporting message:
+
+AI-powered satellite and drone intelligence for identifying, investigating and responding to potential forest encroachment.
+
+Include clear actions:
+
+- Explore the Command Centre.
+- See How It Works.
+
+### Visual composition
+
+Create an image-led hero with a geospatial intelligence visual element.
+
+For example:
+
+- Aerial forest imagery.
+- A contained map panel.
+- A subtle geographic detection overlay.
+- A monitoring indicator.
+- A clear evidence-preview element.
+
+Do not overcrowd the hero with random statistics or decorative charts.
+
+### Remaining sections
+
+Include:
+
+1. Mission and platform introduction.
+2. How satellite monitoring works.
+3. Drone intelligence.
+4. Evidence correlation.
+5. Interactive intelligence map preview.
+6. Investigation workflow.
+7. Technology overview.
+8. Responsible AI and evidence verification.
+9. Clear footer and navigation.
+
+All statistics must be sourced from actual platform records or clearly identified as illustrative demonstrations.
+
+## 9.7 Command Centre
+
+This is the most important application page.
+
+The layout must communicate the operational situation immediately.
+
+### Top-level metrics
+
+Display a small, useful set of metrics:
+
+- Total monitoring area.
+- Active monitoring zones.
+- Potential disturbances.
+- Pending investigations.
+- Verified incidents.
+- Affected area.
+
+Use actual database-derived metrics.
+
+Do not create random numbers simply to fill cards.
+
+### Main map workspace
+
+Give the map a significant share of the page.
+
+The map should show:
+
+- Forest boundaries.
+- Protected areas.
+- Disturbance polygons.
+- Severity markers.
+- External alerts.
+- Drone observations.
+- Monitoring boundaries.
+- Heatmap layer.
+
+Provide:
+
+- Layer controls.
+- Geographic search.
+- Time filters.
+- Severity filters.
+- Source filters.
+- Map legend.
+- Zoom controls.
+- Fullscreen mode.
+- Selection of incident polygons.
+
+Clicking an incident should open a meaningful detail panel.
+
+Do not implement the map as a static decorative screenshot.
+
+### Supporting panels
+
+Use secondary panels for:
+
+- Recent incidents.
+- High-priority alerts.
+- Pending verification.
+- Latest system activity.
+
+### Analytical section
+
+Below the main map, include selected charts:
+
+- Forest disturbance trends.
+- Severity distribution.
+- Disturbances by region.
+- Verification performance.
+
+Use restrained data visualisation.
+
+## 9.8 Geospatial intelligence page
+
+Design this as a dedicated map investigation workspace.
+
+The map should dominate the view.
+
+Support:
+
+- Multiple geographic layers.
+- Polygon selection.
+- Time filtering.
+- Historical timeline.
+- Image comparison.
+- Detection details.
+- Geographic context.
+- Layer visibility controls.
+
+Use a contextual details panel that opens when a polygon or incident is selected.
+
+The map must remain interactive and usable.
+
+## 9.9 Satellite monitoring page
+
+Include:
+
+- Monitoring-region selection.
+- Observation-date selection.
+- Satellite image preview.
+- Historical comparison.
+- Tree-probability analysis.
+- Land-cover transitions.
+- Candidate disturbance polygons.
+- Data source information.
+- Image-quality indicators.
+- Processing status.
+
+Use a split-screen before/after viewer.
+
+Provide an opacity slider or swipe comparison.
+
+Make the observation dates clearly visible.
+
+## 9.10 Drone intelligence page
+
+Design a focused media-analysis workspace.
+
+Include:
+
+- Drag-and-drop upload.
+- Supported formats.
+- Upload validation.
+- Image/video preview.
+- Metadata display.
+- Processing progress.
+- Frame timeline.
+- Detection results.
+- Bounding-box overlays.
+- Segmentation-mask overlays.
+- Toggle controls.
+- Confidence display.
+- Export options.
+
+The original evidence must remain accessible.
+
+Provide clear loading, failure and completed states.
+
+## 9.11 Incident management
+
+Create a professional investigation table.
+
+Columns should include:
+
+- Incident ID.
+- Detection date.
+- Location.
+- Disturbance type.
+- Severity.
+- Affected area.
+- Evidence source.
+- Review status.
+- Assigned analyst.
+
+Support:
+
+- Search.
+- Sorting.
+- Pagination.
+- Filtering.
+- Bulk assignment where appropriate.
+- Export.
+
+Avoid unnecessarily dense tables.
+
+## 9.12 Verification workspace
+
+This page should prioritise evidence inspection.
+
+Use a two-column or three-column investigation layout.
+
+Possible composition:
+
+Left:
+
+- Satellite imagery.
+- Before/after comparison.
+- Drone imagery.
+
+Centre:
+
+- Incident summary.
+- AI explanation.
+- Detection results.
+- Geographic details.
+
+Right:
+
+- Evidence metadata.
+- Reviewer actions.
+- Assignment.
+- Status controls.
+- Investigation notes.
+
+Make actions prominent but not visually aggressive.
+
+Users should understand what evidence supports a finding before making a decision.
+
+## 9.13 Analytics
+
+Present meaningful analytical information.
+
+Include:
+
+- Historical forest disturbance.
+- Area affected over time.
+- Incidents by jurisdiction.
+- Severity distribution.
+- Sources of evidence.
+- Review performance.
+- Protected-area incidents.
+
+Use suitable charts.
+
+Avoid decorative charts with no analytical purpose.
+
+## 9.14 Reports
+
+Provide:
+
+- Generated PDF reports.
+- Incident references.
+- Report dates.
+- Report status.
+- Download controls.
+- Export history.
+
+## 9.15 Public portal
+
+Use a simpler, more accessible visual design.
+
+Display approved and anonymised information only.
+
+Do not expose sensitive operational coordinates, private data or unverified incidents.
+
+## 9.16 Responsive design
+
+The primary audience is desktop users such as analysts and forest authorities.
+
+However, support tablets and mobile devices.
+
+On smaller screens:
+
+- Collapse the sidebar.
+- Reorganise analytical panels.
+- Preserve map interaction.
+- Stack evidence panels.
+- Provide mobile-friendly controls.
+- Avoid horizontal overflow.
+
+## 9.17 UI interaction and quality standards
+
+Every interactive element must do something meaningful.
+
+Implement:
+
+- Loading states.
+- Skeletons where appropriate.
+- Empty states.
+- Error states.
+- Confirmation dialogs for destructive actions.
+- Form validation.
+- Toast feedback.
+- Keyboard-accessible controls.
+- Visible focus states.
+- Tooltips where needed.
+
+Avoid:
+
+- Random gradients.
+- Excessive glassmorphism.
+- Too many rounded cards.
+- Inconsistent corner radii.
+- Unnecessary animation.
+- Giant headings on every screen.
+- Fake live indicators.
+- Non-functional controls.
+- Placeholder charts presented as real analytics.
+
+Use subtle animation for transitions and meaningful feedback only.
+
+The result should feel handcrafted, consistent and production-quality.
+
+---
+
+# 10. APPLICATION PAGES
+
+Implement the following pages:
+
+1. Public landing page.
+2. Authentication.
+3. Command Centre.
+4. Geospatial Intelligence Map.
+5. Satellite Monitoring.
+6. Drone Intelligence.
+7. Incident Management.
+8. Verification Workspace.
+9. Analytics.
+10. Reports.
+11. Public Awareness Portal.
+12. Administration.
+
+Each page must have its own clear information hierarchy and primary user task.
+
+Do not copy the same layout onto every page.
+
+---
+
+# 11. NATURAL-LANGUAGE INTELLIGENCE ASSISTANT
+
+Implement a grounded AI assistant.
+
+Example questions:
+
+- Show suspected disturbances detected in the last 30 days.
+- Which protected regions have the most pending investigations?
+- Summarise this incident.
+- Compare disturbance activity between two districts.
+- Show incidents with drone evidence.
+- Generate a summary of recent verified events.
+
+The assistant must query actual application data through controlled backend tools.
+
+Enforce user permissions.
+
+Do not permit unrestricted SQL access.
+
+Provide incident references and links.
+
+Never fabricate statistics or incidents.
+
+---
+
+# 12. ADVANCED DIFFERENTIATORS
+
+Prioritise the following:
+
+### A. Satellite and drone evidence fusion
+
+Link observations with credible geographic and temporal relationships.
+
+### B. Explainable detection
+
+Explain the measurements and observations supporting a disturbance flag.
+
+### C. Investigation-priority assessment
+
+Use transparent evidence-based severity factors.
+
+### D. Forest risk watchlist
+
+Initially use explainable heuristics based on historical disturbances, nearby roads, boundaries and previous incidents.
+
+Do not claim validated predictive accuracy without evaluation.
+
+### E. Carbon-stock impact estimate
+
+Only calculate where suitable biomass data and a documented methodology are available.
+
+Show assumptions and uncertainty.
+
+### F. Multilingual interface
+
+Initially support English and Hindi.
+
+### G. Automated incident summary
+
+Generate evidence-grounded summaries for analysts.
+
+---
+
+# 13. DATABASE AND BACKEND ARCHITECTURE
+
+Use Supabase PostgreSQL and PostGIS.
+
+Create structured entities for:
+
+- Users.
+- Roles.
+- Authorities.
+- Jurisdictions.
+- Monitoring areas.
+- Protected boundaries.
+- Satellite scenes.
+- Satellite observations.
+- Processing jobs.
+- Drone uploads.
+- Drone frames.
+- AI detections.
+- Segmentation masks.
+- Disturbance polygons.
+- Incidents.
+- External alerts.
+- Evidence assets.
+- Reports.
+- Review actions.
+- Notifications.
+- Escalations.
+- Audit events.
+- Model versions.
+
+Use proper indexing, relationships, spatial indexing and RLS.
+
+Organise the FastAPI backend into independent modules for:
+
+- Authentication.
+- Monitoring areas.
+- Satellite integration.
+- Change detection.
+- Geospatial analysis.
+- Drone ingestion.
+- Model inference.
+- Evidence fusion.
+- Incident management.
+- Notifications.
+- Reports.
+- Analytics.
+- AI assistant.
+
+Use asynchronous background jobs for expensive operations.
+
+Implement retries, error reporting, idempotency and progress tracking.
+
+---
+
+# 14. SECURITY
+
+Implement:
+
+- Supabase Auth.
+- Row Level Security.
+- Role-based access.
+- Secure API authentication.
+- Environment-variable secrets.
+- File validation.
+- Upload restrictions.
+- Secure storage access.
+- Rate limiting.
+- Audit logs.
+- Safe error handling.
+
+Never expose Supabase service-role keys or provider secrets in frontend code.
+
+---
+
+# 15. DEVELOPMENT PHASES AND REQUIRED SKILLS
+
+Execute the project in the following order.
+
+## PHASE 0 — Repository audit
+
+Tasks:
+
+- Inspect the current repository.
+- Identify the framework.
+- Review existing components.
+- Inspect current database connections.
+- Verify infrastructure.
+- Check available skills.
+- Identify incomplete work.
+- Understand the Git state.
+
+Skills:
+
+`/using-superpowers`
+
+`/repomix-explorer` when the codebase is large or unfamiliar.
+
+`/writing-plans`
+
+Deliverables:
+
+Repository audit, technical plan and implementation roadmap.
+
+## PHASE 1 — Architecture and design
+
+Tasks:
+
+- Establish the system architecture.
+- Define API contracts.
+- Design the database.
+- Establish integration boundaries.
+- Define error-handling strategy.
+- Define the model deployment plan.
+- Establish the design system.
+
+Skills:
+
+`/brainstorming`
+
+`/writing-plans`
+
+`/brand`
+
+`/ui-ux-pro-max`
+
+`/design-system`
+
+Deliverables:
+
+Architecture documentation, database plan and DESIGN.md.
+
+## PHASE 2 — Frontend foundation
+
+Tasks:
+
+- Establish the application shell.
+- Build the sidebar.
+- Build the top navigation.
+- Implement routing.
+- Create reusable components.
+- Implement the landing page.
+- Implement the initial command centre.
+
+Skills:
+
+`/hallmark`
+
+`/impeccable`
+
+`/ui-ux-pro-max`
+
+`/design-system`
+
+`/ui-styling`
+
+`/vercel-react-best-practices`
+
+`/test-driven-development`
+
+## PHASE 3 — Backend and database
+
+Tasks:
+
+- Implement Supabase integration.
+- Enable PostGIS.
+- Create schema and migrations.
+- Implement RLS.
+- Implement authentication.
+- Implement storage.
+- Implement API structure.
+
+Skills:
+
+`/writing-plans`
+
+`/executing-plans`
+
+`/test-driven-development`
+
+`/systematic-debugging` when failures occur.
+
+## PHASE 4 — Satellite intelligence
+
+Tasks:
+
+- Integrate Earth Engine.
+- Access Dynamic World.
+- Integrate Sentinel-2 observations.
+- Implement preprocessing.
+- Implement temporal comparison.
+- Calculate forest-cover changes.
+- Generate disturbance polygons.
+- Implement geofencing.
+
+Skills:
+
+`/brainstorming` for any new analysis methodology.
+
+`/test-driven-development`
+
+`/systematic-debugging`
+
+`/requesting-code-review` after major processing modules.
+
+## PHASE 5 — Model inference service
+
+Tasks:
+
+- Download official pretrained weights.
+- Deploy Grounding DINO Tiny.
+- Deploy SAM 2 Small.
+- Implement inference endpoints.
+- Verify CPU performance.
+- Implement resource management.
+- Test actual predictions.
+
+Skills:
+
+`/writing-plans`
+
+`/test-driven-development`
+
+`/systematic-debugging`
+
+`/verification-before-completion`
+
+## PHASE 6 — Drone intelligence
+
+Tasks:
+
+- Image and video upload.
+- Metadata extraction.
+- Frame sampling.
+- Detection.
+- Segmentation.
+- Geolocation.
+- Visual evidence generation.
+
+Skills:
+
+`/test-driven-development`
+
+`/impeccable` for the media-analysis interface.
+
+`/ui-styling`
+
+`/vercel-react-best-practices`
+
+## PHASE 7 — Incident and evidence management
+
+Tasks:
+
+- Incident creation.
+- Deduplication.
+- Severity scoring.
+- Human review.
+- Evidence management.
+- PDF generation.
+- Audit history.
+
+Skills:
+
+`/brainstorming` where workflows need new design.
+
+`/test-driven-development`
+
+`/requesting-code-review`
+
+## PHASE 8 — Alerts and external data
+
+Tasks:
+
+- Global Forest Watch integration.
+- Notifications.
+- Escalation.
+- External corroboration.
+- Provider configuration.
+
+Skills:
+
+`/test-driven-development`
+
+`/systematic-debugging`
+
+## PHASE 9 — Advanced AI
+
+Tasks:
+
+- Natural-language assistant.
+- Explainable summaries.
+- Risk watchlist.
+- Carbon estimates.
+- Multilingual support.
+
+Skills:
+
+`/brainstorming`
+
+`/test-driven-development`
+
+`/requesting-code-review`
+
+## PHASE 10 — Design audit, verification and deployment
+
+Tasks:
+
+- Complete end-to-end testing.
+- Review security.
+- Verify integrations.
+- Perform frontend design audit.
+- Test responsive layouts.
+- Verify actual model inference.
+- Test failure handling.
+- Deploy all services.
+- Prepare demonstration.
+
+Skills:
+
+`/impeccable`
+
+`/hallmark` for new pages or major design work.
+
+`/verification-before-completion`
+
+`/requesting-code-review`
+
+`/finishing-a-development-branch` when appropriate.
+
+---
+
+
+# 19. HOW TO EXECUTE THIS PROJECT
+
+Take ownership of the actual implementation.
+
+Do not respond to this specification with another long generic implementation proposal.
+
+Begin by inspecting the existing project.
+
+Create the implementation plan.
+
+Identify the relevant skills.
+
+Verify the connected platforms.
+
+Start implementation in the appropriate sequence.
+
+Use subagents only when the work is independent and interfaces have been established.
+
+Do not make destructive changes without understanding the existing application.
+
+Do not replace the current technology stack unnecessarily.
+
+Do not request credentials that are already securely configured.
+
+When an API requires credentials that are genuinely missing, explain exactly which credentials are required and where they should be configured.
+
+Keep a concise implementation record showing:
+
+- Completed functionality.
+- Verified functionality.
+- Pending functionality.
+- Known limitations.
+- Current blockers.
+- Next engineering milestone.
+
+Never claim success without evidence.
+
+---
+
+# 20. FINAL PRODUCT VISION
+
+The finished application should demonstrate a complete forest-protection intelligence workflow.
+
+An authority opens the platform.
+
+The command centre displays monitored forest regions.
+
+Satellite intelligence identifies a suspicious forest-cover change.
+
+The system generates a geographic disturbance polygon.
+
+The incident is assigned an investigation priority.
+
+An analyst opens the satellite comparison.
+
+Drone imagery is added.
+
+Grounding DINO identifies potentially relevant vehicles or equipment.
+
+SAM 2 segments the detected objects.
+
+The platform links the relevant observations when the geographic evidence supports the relationship.
+
+The analyst reviews the collected evidence.
+
+The incident is verified or rejected.
+
+An evidence-backed investigation report is generated.
+
+The system maintains a traceable record of the entire process.
+
+The natural-language assistant can answer questions about the actual incident records.
+
+The final product should communicate that this is not just computer vision, but an integrated AI-assisted forest monitoring and investigation platform.
+
+**Build for actual operational functionality, excellent geospatial visualisation, trustworthy AI inference and professional product quality.**
+
+Begin with Phase 0 and execute the project systematically.
+
+## The most important skills to use
+
+For quick reference, these are the ones I would expect Antigravity to rely on most.
+
+| Development activity                   | Skill                             |
+| -------------------------------------- | --------------------------------- |
+| Starting the workflow                  | `/using-superpowers`              |
+| Planning the project                   | `/writing-plans`                  |
+| Designing new functionality            | `/brainstorming`                  |
+| Understanding an unfamiliar repository | `/repomix-explorer`               |
+| Premium website design                 | `/hallmark`                       |
+| Frontend refinement                    | `/impeccable`                     |
+| UI/UX research                         | `/ui-ux-pro-max`                  |
+| Visual identity                        | `/brand`                          |
+| Design tokens                          | `/design-system`                  |
+| Component implementation               | `/ui-styling`                     |
+| React performance                      | `/vercel-react-best-practices`    |
+| Feature implementation                 | `/test-driven-development`        |
+| Parallel engineering                   | `/dispatching-parallel-agents`    |
+| Multi-agent implementation             | `/subagent-driven-development`    |
+| Debugging                              | `/systematic-debugging`           |
+| Code review                            | `/requesting-code-review`         |
+| Final verification                     | `/verification-before-completion` |
+
+One design decision I particularly want you to retain: the application should be map-first, evidence-first and investigation-first. The map is the centrepiece, not a small widget surrounded by dashboard cards. That will make Aranya Sentinel look and behave like a proper geospatial intelligence platform.

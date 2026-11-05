@@ -1,0 +1,23 @@
+[
+  {
+    "mode": "redesign",
+    "depth": "full",
+    "scope": "site",
+    "shape": "Marquee Hero",
+    "theme": "vantage",
+    "axes": "dark/grotesk-sans/chromatic-lime",
+    "hero": "Corridor",
+    "nav": "search-led bar",
+    "footer": "letter close",
+    "imagery": "product",
+    "photos": [],
+    "entry": "src/app/page.tsx",
+    "fingerprint": "vantage-terrain-steel-35a9bf",
+    "sections": ["hero", "matrix", "reserves", "footer"],
+    "signature": "canopy-point-matrix",
+    "waived": [],
+    "prompt": "Forest intelligence and deforestation monitoring tactical platform",
+    "timestamp": "2026-11-02T13:40:00Z"
+  }
+]
+

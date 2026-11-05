@@ -1,0 +1,15 @@
+{
+  "id": "REP-2026-002",
+  "incident_id": "AS-2026-090",
+  "title": "Interdiction Brief: Unauthorized Riverbed Mining in Corbett Buffer",
+  "jurisdiction": "Jim Corbett National Park",
+  "generated_at": "2026-10-26 11:15 IST",
+  "generated_by": "DFO Amit Rawat",
+  "status": "ESCALATED_ENFORCEMENT",
+  "summary": "Drone reconnaissance confirmed illegal sand mining and riparian forest destruction across 8.5 ha. Two heavy earthmovers geolocated within Ramganga Riverine Corridor.",
+  "area_hectares": 8.5,
+  "machinery_detected": [
+    "CAT D6 Bulldozer",
+    "Heavy Tipper Truck"
+  ]
+}

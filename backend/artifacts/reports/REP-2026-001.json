@@ -1,0 +1,16 @@
+{
+  "id": "REP-2026-001",
+  "incident_id": "AS-2026-088",
+  "title": "Forensic Investigation Dossier: Commercial Logging & Encroachment in Agumbe",
+  "jurisdiction": "Western Ghats (Agumbe Reserve)",
+  "generated_at": "2026-10-26 15:30 IST",
+  "generated_by": "Senior Conservator K. Sharma",
+  "status": "FINAL_CERTIFIED",
+  "summary": "Spatiotemporal fusion verified 14.8 ha canopy destruction with 94.5% evidence certainty. Drone imagery captured active Komatsu excavator and log hauler operating in Category-1 Core Sanctuary.",
+  "area_hectares": 14.8,
+  "machinery_detected": [
+    "Komatsu PC200 Excavator",
+    "Timber Hauler Truck",
+    "Stacked Teak Logs"
+  ]
+}
