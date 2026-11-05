@@ -35,6 +35,10 @@ export interface Incident {
   drone_mission_ref?: string;
   evidence_count?: number;
   disturbances_polygon_id?: string;
+  authorization_status?: string;
+  version?: number;
+  updated_at?: string;
+  is_demo?: boolean;
 }
 
 export interface DisturbancePolygon {
