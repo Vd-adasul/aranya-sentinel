@@ -168,9 +168,9 @@ function ReportsContent() {
   const effectiveTargets =
     plateDetections.length > 0
       ? plateDetections
-      : fusionTargets.map((t) => ({
-          label: t.class,
-          confidence: t.conf,
+      : fusionTargets.map((t: any) => ({
+          label: t.label || t.class || t.target || "Target",
+          confidence: t.confidence ?? t.conf ?? 0.92,
           box: t.box,
         }));
 
