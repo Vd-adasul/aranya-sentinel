@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { useApp } from "@/lib/store";
@@ -31,6 +31,7 @@ function IncidentsContent() {
   const { incidents, updateIncident } = useApp();
   const searchParams = useSearchParams();
   const deepLinkedId = searchParams.get("id");
+  const consumedDeepLink = useRef<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
@@ -64,9 +65,11 @@ function IncidentsContent() {
 
   // Consume deep-linked incident ID from URL (?id=AS-2026-088)
   useEffect(() => {
-    if (deepLinkedId) {
+    if (!deepLinkedId) consumedDeepLink.current = null;
+    if (deepLinkedId && consumedDeepLink.current !== deepLinkedId) {
       const match = incidents.find((i) => i.id === deepLinkedId);
       if (match) {
+        consumedDeepLink.current = deepLinkedId;
         openTriage(match);
       }
     }

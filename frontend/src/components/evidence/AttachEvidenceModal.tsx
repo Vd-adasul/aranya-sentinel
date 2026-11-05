@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, GitMerge, CheckCircle2, Loader2, Link2, Crosshair, MapPin } from "lucide-react";
-import { attachEvidenceToIncident } from "@/lib/api";
+import { attachEvidenceToIncident, getDroneSamples } from "@/lib/api";
 import { useApp } from "@/lib/store";
-import { Incident } from "@/lib/types";
+import { Incident, DroneSampleMission } from "@/lib/types";
 
 interface AttachEvidenceModalProps {
   isOpen: boolean;
@@ -27,6 +27,8 @@ export function AttachEvidenceModal({ isOpen, onClose, incident, onSuccess }: At
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const [droneMissions, setDroneMissions] = useState<DroneSampleMission[]>([]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -37,13 +39,19 @@ export function AttachEvidenceModal({ isOpen, onClose, incident, onSuccess }: At
       setSelectedIncidentId(incident?.id || incidents[0]?.id || "");
       setError(null);
       setSuccess(null);
+      getDroneSamples(true).then((data) => {
+        setDroneMissions(data);
+        if (data.length > 0 && evidenceType === "drone" && (!evidenceId || evidenceId === "DRN-MSSN-101")) {
+          setEvidenceId(data[0].id);
+        }
+      }).catch(() => {});
     } else {
       document.body.style.overflow = "";
     }
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOpen, incident, incidents]);
+  }, [isOpen, incident, incidents, evidenceType]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -167,16 +175,32 @@ export function AttachEvidenceModal({ isOpen, onClose, incident, onSuccess }: At
 
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-ink-600 mb-1">
-                Evidence Identifier
+                Evidence Identifier / Mission
               </label>
-              <input
-                type="text"
-                value={evidenceId}
-                onChange={(e) => setEvidenceId(e.target.value)}
-                placeholder="e.g. DRN-MSSN-101"
-                className="w-full bg-paper-100 border border-sand rounded-control px-3 h-10 text-ink-900 font-mono text-xs"
-                required
-              />
+              {evidenceType === "drone" && droneMissions.length > 0 ? (
+                <select
+                  value={evidenceId}
+                  onChange={(e) => setEvidenceId(e.target.value)}
+                  className="w-full bg-paper-100 border border-sand rounded-control px-3 h-10 text-ink-900 font-mono text-xs cursor-pointer"
+                  required
+                >
+                  {droneMissions.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.id} ({m.machinery_identified?.length || 0} detections - {new Date(m.date).toLocaleDateString()})
+                    </option>
+                  ))}
+                  <option value="custom">-- Custom Reference --</option>
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={evidenceId}
+                  onChange={(e) => setEvidenceId(e.target.value)}
+                  placeholder="e.g. DRN-MSSN-101 or DIST-WG-01"
+                  className="w-full bg-paper-100 border border-sand rounded-control px-3 h-10 text-ink-900 font-mono text-xs"
+                  required
+                />
+              )}
             </div>
           </div>
 

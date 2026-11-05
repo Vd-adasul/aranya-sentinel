@@ -35,8 +35,8 @@ export default function SatellitePage() {
       <div className="flex-1 p-4 sm:p-7 space-y-6 max-w-[1500px] w-full mx-auto font-sans text-xs">
         {/* Page Header */}
         <PageHeader
-          title="Satellite &amp; Dynamic World 10m Observation"
-          scope={`Sensor: Sentinel-2 MSI (10m) · ${selectedRegion.name.split("—")[0].trim()}`}
+          title="Satellite &amp; Land Cover Observation"
+          scope={`Sentinel-2 MSI (10m) · ${selectedRegion.name.split("—")[0].trim()}`}
           description="Multispectral temporal change detection, bi-temporal swipe comparison, and land cover probability classification."
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">

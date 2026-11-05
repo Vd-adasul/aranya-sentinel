@@ -90,6 +90,7 @@ export interface DroneDetectionResult {
   inference_time_ms: number;
   model_used: string;
   device_used: string;
+  image_url?: string;
 }
 
 export interface EvidenceFusionData {
@@ -145,6 +146,8 @@ export interface ReportItem {
   machinery_detected: string[];
   sha256_evidence_seal: string;
   download_url: string;
+  drone_mission_ref?: string;
+  drone_image_url?: string;
 }
 
 export interface ChatResponse {

@@ -32,3 +32,9 @@ screenshots/
 .DS_Store
 Thumbs.db
 *.log
+
+# Local verification output and runtime data
+.next-audit/
+backend/aranya.db*
+
+backend/artifacts/

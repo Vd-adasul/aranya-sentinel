@@ -48,8 +48,9 @@ class InferenceClient:
     ) -> Dict[str, Any]:
         # Try HTTP endpoint first
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                files = {"file": (filename, image_bytes, "image/jpeg")}
+            async with httpx.AsyncClient(timeout=90.0) as client:
+                mime = "image/png" if filename.lower().endswith(".png") else "image/jpeg"
+                files = {"file": (filename, image_bytes, mime)}
                 data = {
                     "text_prompt": text_prompt,
                     "box_threshold": str(box_threshold),
@@ -62,8 +63,9 @@ class InferenceClient:
                     raise RuntimeError(f"{res.json().get('detail', res.text)}")
         except RuntimeError:
             raise
-        except Exception:
+        except Exception as e:
             # Fall back to in-process execution
+            print(f"[InferenceClient] Remote inference note: {e}. Falling back to in-process models.")
             pass
 
         # In-process execution with real DINO and SAM2

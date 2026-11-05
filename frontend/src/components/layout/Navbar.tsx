@@ -359,7 +359,7 @@ export function Navbar() {
             className="hidden sm:flex items-center gap-2 px-3 h-11 min-h-[44px] rounded-control border border-sand bg-bone text-xs font-sans text-ink-600 shadow-card"
             title={
               backendStatus.status === "healthy"
-                ? "PyTorch GPU service active on port 8000"
+                ? "Backend API connected; model availability is reported separately"
                 : "Standalone demo mode active with sample data"
             }
           >
@@ -369,7 +369,7 @@ export function Navbar() {
               }`}
             />
             <span className="text-xs font-medium text-ink-900 whitespace-nowrap">
-              {backendStatus.status === "healthy" ? "Live PyTorch" : "Local Demo"}
+              {backendStatus.status === "healthy" ? "API Connected" : "API Unavailable"}
             </span>
           </div>
         </div>

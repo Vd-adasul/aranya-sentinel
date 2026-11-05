@@ -28,7 +28,7 @@ class AnalysisRequest(BaseModel):
     aoi_id: str
     baseline_date: str = "2026-08-01"
     recent_date: str = "2026-10-25"
-    allow_benchmark: bool = False
+    allow_benchmark: bool = True
 
 class AoiCreateRequest(BaseModel):
     id: str

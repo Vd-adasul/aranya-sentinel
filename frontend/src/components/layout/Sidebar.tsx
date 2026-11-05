@@ -13,8 +13,6 @@ import {
   BarChart3,
   FileText,
   Users,
-  Sliders,
-  Terminal,
   X,
 } from "lucide-react";
 import { useApp } from "@/lib/store";
@@ -118,11 +116,6 @@ export function Sidebar() {
           href: "/public",
           icon: Users,
         },
-        {
-          title: "System settings",
-          href: "/admin",
-          icon: Sliders,
-        },
       ],
     },
   ];
@@ -200,23 +193,6 @@ export function Sidebar() {
             </div>
           ))}
         </nav>
-      </div>
-
-      {/* Footer */}
-      <div className="p-4 border-t border-sand bg-paper text-xs font-sans text-ink-600 space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 font-medium text-ink-900">
-            <Terminal className="h-3.5 w-3.5 text-moss-600" />
-            Backend link:
-          </span>
-          <span className="font-mono text-ink-900 num font-semibold">
-            {backendStatus.status === "healthy" ? "PyTorch (Port 8000)" : "Local Demo"}
-          </span>
-        </div>
-        <div className="flex items-center justify-between text-[11px] text-ink-600">
-          <span>Cadastral grid:</span>
-          <span className="font-mono num">v2026.11-atlas</span>
-        </div>
       </div>
     </div>
   );

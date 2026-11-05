@@ -21,6 +21,8 @@ interface AppContextType {
   setIsSidebarOpen: (open: boolean) => void;
   backendStatus: { status: string; device?: string; dino_loaded?: boolean };
   activeAlertCount: number;
+  lastActiveIncidentId: string | null;
+  setLastActiveIncidentId: (id: string | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -29,11 +31,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [regions, setRegions] = useState<Region[]>(MONITORING_REGIONS);
   const [selectedRegion, setSelectedRegion] = useState<Region>(MONITORING_REGIONS[0]);
   const [incidents, setIncidents] = useState<Incident[]>(INITIAL_INCIDENTS);
+  const [lastActiveIncidentId, setLastActiveIncidentIdState] = useState<string | null>(null);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [backendStatus, setBackendStatus] = useState<{ status: string; device?: string; dino_loaded?: boolean }>({
     status: "checking",
   });
+
+  const setLastActiveIncidentId = (id: string | null) => {
+    setLastActiveIncidentIdState(id);
+    try {
+      if (id) localStorage.setItem("aranya_last_incident_id", id);
+      else localStorage.removeItem("aranya_last_incident_id");
+    } catch { /* Storage may be unavailable in private browsing. */ }
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("aranya_last_incident_id");
+        if (saved) setLastActiveIncidentIdState(saved);
+      } catch { /* Keep session state when storage is unavailable. */ }
+    }
+  }, []);
 
   const refreshRegions = async () => {
     try {
@@ -89,7 +109,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const activeAlertCount = incidents.filter(
-    (i) => i.severity === "CRITICAL" || i.status === "New" || i.status === "Escalated"
+    (i) => !["Resolved", "Rejected"].includes(i.status) &&
+      (i.severity === "CRITICAL" || i.status === "New" || i.status === "Escalated")
   ).length;
 
   return (
@@ -110,6 +131,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setIsSidebarOpen,
         backendStatus,
         activeAlertCount,
+        lastActiveIncidentId,
+        setLastActiveIncidentId,
       }}
     >
       {children}

@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useApp } from "@/lib/store";
 import { ReportItem } from "@/lib/types";
-import { getReports, generateReport } from "@/lib/api";
+import { getReports, generateReport, getFullMediaUrl, getDroneRecord } from "@/lib/api";
 import { useSearchParams } from "next/navigation";
 import {
   FileText,
@@ -45,36 +45,55 @@ function formatReportSerial(id: string): string {
 }
 
 function ReportsContent() {
-  const { incidents } = useApp();
+  const { incidents, refreshIncidents, lastActiveIncidentId, setLastActiveIncidentId } = useApp();
   const searchParams = useSearchParams();
   const deepLinkedIncidentId = searchParams.get("id");
 
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedIncidentForNew, setSelectedIncidentForNew] = useState(
-    deepLinkedIncidentId || incidents[0]?.id || "AS-2026-088"
+  const [selectedIncidentForNew, setSelectedIncidentForNew] = useState<string>(
+    deepLinkedIncidentId || lastActiveIncidentId || "AS-2026-088"
   );
 
   useEffect(() => {
-    getReports().then((data) => {
+    refreshIncidents();
+    const targetIncId = deepLinkedIncidentId
+      || lastActiveIncidentId
+      || (incidents.find((i) => i.drone_mission_ref && i.drone_mission_ref.startsWith("DRONE-"))?.id);
+
+    getReports().then(async (data) => {
+      let matched = null;
+      if (targetIncId) {
+        matched = data.find((r) => r.incident_id === targetIncId);
+        if (!matched) {
+          try {
+            matched = await generateReport(targetIncId);
+            data = [matched, ...data];
+          } catch (e) {
+            console.error("Auto report generation failed:", e);
+          }
+        }
+      }
+
       setReports(data);
-      if (deepLinkedIncidentId) {
-        const match = data.find((r) => r.incident_id === deepLinkedIncidentId);
-        if (match) setSelectedReport(match);
-        else if (data.length > 0) setSelectedReport(data[0]);
+      if (matched) {
+        setSelectedReport(matched);
+        setSelectedIncidentForNew(matched.incident_id);
       } else if (data.length > 0) {
         setSelectedReport(data[0]);
+        setSelectedIncidentForNew(data[0].incident_id);
       }
     });
-  }, [deepLinkedIncidentId]);
+  }, [deepLinkedIncidentId, lastActiveIncidentId]);
 
   const handleGenerateNew = async () => {
     setIsGenerating(true);
     try {
       const rep = await generateReport(selectedIncidentForNew);
-      setReports((prev) => [rep, ...prev]);
+      setReports((prev) => [rep, ...prev.filter((r) => r.id !== rep.id)]);
       setSelectedReport(rep);
+      setLastActiveIncidentId(selectedIncidentForNew);
     } finally {
       setIsGenerating(false);
     }
@@ -84,13 +103,43 @@ function ReportsContent() {
     (inc) => inc.id === selectedReport?.incident_id
   );
 
+  const droneMissionId = selectedReport?.drone_mission_ref || relatedIncident?.drone_mission_ref;
+
+  const [plateDetections, setPlateDetections] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (droneMissionId && droneMissionId.startsWith("DRONE-")) {
+      getDroneRecord(droneMissionId)
+        .then((rec: any) => {
+          if (rec && rec.detections) {
+            setPlateDetections(rec.detections);
+          } else {
+            setPlateDetections([]);
+          }
+        })
+        .catch(() => setPlateDetections([]));
+    } else {
+      setPlateDetections([]);
+    }
+  }, [droneMissionId]);
+
+  const droneImageSrc = selectedReport?.drone_image_url
+    ? getFullMediaUrl(selectedReport.drone_image_url)
+    : (relatedIncident?.drone_mission_ref
+        ? (relatedIncident.drone_mission_ref.startsWith("DRONE-")
+            ? getFullMediaUrl(`/api/drone/media/${relatedIncident.drone_mission_ref}`)
+            : (relatedIncident.drone_mission_ref.toLowerCase().includes("agumbe") || relatedIncident.drone_mission_ref.toLowerCase().includes("101")
+                ? getFullMediaUrl("/imagery/drone-aerial-orthomosaic.jpg")
+                : (relatedIncident.drone_mission_ref.toLowerCase().includes("102") ? getFullMediaUrl("/imagery/terrain-regional.jpg") : null)))
+        : null);
+
   const handlePrintDossier = () => {
     if (!selectedReport) return;
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
     const origin = window.location.origin;
-    const droneImg = `${origin}/imagery/drone-aerial-orthomosaic.jpg`;
+    const droneImg = droneImageSrc || `${origin}/imagery/drone-aerial-orthomosaic.jpg`;
     const satRecentImg = `${origin}/imagery/satellite-recent.jpg`;
     const satNdviImg = `${origin}/imagery/satellite-ndvi-spectral.jpg`;
 
@@ -102,7 +151,10 @@ function ReportsContent() {
       "Protected Reserve Sanctuary";
     const treeLossPct = relatedIncident?.tree_loss_pct ?? 49.0;
     const certScore = relatedIncident?.evidence_score ?? 94.5;
-    const droneMission = relatedIncident?.drone_mission_ref || "DRN-MSSN-101";
+    const droneMission = selectedReport.drone_mission_ref || relatedIncident?.drone_mission_ref || "DRN-MSSN-101";
+    const machinerySummary = selectedReport.machinery_detected.length > 0
+      ? selectedReport.machinery_detected.join(" · ").toUpperCase()
+      : "AERIAL RECONNAISSANCE VERIFIED";
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -326,12 +378,13 @@ function ReportsContent() {
               overflow: hidden;
               background: #111;
               border: 1px solid #183C2D;
-              height: 170px;
+              height: 220px;
             }
             .plate-img-wrapper img {
               width: 100%;
               height: 100%;
               object-fit: cover;
+              object-position: center;
               display: block;
             }
             .tactical-hud-stamp {
@@ -603,13 +656,15 @@ function ReportsContent() {
                 </div>
                 <div class="plate-img-wrapper">
                   <img src="${droneImg}" alt="Drone Aerial Reconnaissance" />
-                  <div class="hud-callout">EXCAVATOR 94% · HAULER 89%</div>
+                  <div class="hud-callout">${machinerySummary}</div>
                   <div class="tactical-hud-stamp">
                     AGL ALT: 120m | RTK GPS: ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E | GROUNDING DINO + SAM-2
                   </div>
                 </div>
                 <div class="plate-caption">
-                  Aerial orthomosaic capture at 120m AGL. Machine learning bounding box model resolved active crawler excavator and multi-axle timber hauler loaded with felled teak logs.
+                  ${selectedReport.machinery_detected.length > 0
+                    ? `Aerial orthomosaic capture at 120m AGL. Machine learning bounding box model resolved active ${selectedReport.machinery_detected.join(", ")}.`
+                    : `Aerial orthomosaic capture at 120m AGL. Remote sensing survey verified.`}
                 </div>
               </div>
 
@@ -728,7 +783,7 @@ function ReportsContent() {
     "Protected Forest Sanctuary";
   const treeLossPct = relatedIncident?.tree_loss_pct ?? 49.0;
   const certScore = relatedIncident?.evidence_score ?? 94.5;
-  const droneMission = relatedIncident?.drone_mission_ref || "DRN-MSSN-101";
+  const droneMission = selectedReport?.drone_mission_ref || relatedIncident?.drone_mission_ref || "DRN-MSSN-101";
 
   return (
     <AppShell>
@@ -739,6 +794,55 @@ function ReportsContent() {
           description="Court-admissible judicial case dossiers with multi-sensor telemetry, drone aerial exhibits, and SHA-256 cryptographic chain-of-custody seals."
           actions={<ProvenanceBadge source="server" />}
         />
+
+        {/* Active Docket Selection Banner */}
+        <div className="atlas-card p-3.5 bg-bone border-sand flex items-center justify-between gap-4 flex-wrap shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-signal-soft border border-signal/30 flex items-center justify-center text-signal shrink-0">
+              <Scale className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-ink-600">
+                Active Forensic Dossier
+              </div>
+              <div className="text-xs text-ink-900 font-bold">
+                {selectedReport ? `${selectedReport.id} · Docket ${selectedReport.incident_id} (${selectedReport.jurisdiction})` : "Select a Case Docket"}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <label className="text-[11px] font-semibold text-ink-600">Switch Case Docket:</label>
+            <select
+              value={selectedReport?.incident_id || selectedIncidentForNew}
+              onChange={async (e) => {
+                const incId = e.target.value;
+                setSelectedIncidentForNew(incId);
+                setLastActiveIncidentId(incId);
+                let match = reports.find((r) => r.incident_id === incId);
+                if (!match) {
+                  setIsGenerating(true);
+                  try {
+                    match = await generateReport(incId);
+                    setReports((prev) => [match!, ...prev.filter((r) => r.id !== match!.id)]);
+                  } catch (err) {
+                    console.error("Dossier generation error:", err);
+                  } finally {
+                    setIsGenerating(false);
+                  }
+                }
+                if (match) setSelectedReport(match);
+              }}
+              className="bg-paper-100 border border-sand rounded-control px-3 h-9 text-xs font-semibold text-ink-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-canopy-900 cursor-pointer min-w-[280px]"
+            >
+              {incidents.map((inc) => (
+                <option key={inc.id} value={inc.id}>
+                  {inc.id} — {inc.title} {inc.drone_mission_ref ? "✦ [Drone Evidence Linked]" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
         {/* 2-Column Responsive Workspace: Library (4 cols) + Document Preview (8 cols) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -760,12 +864,18 @@ function ReportsContent() {
                 </label>
                 <select
                   value={selectedIncidentForNew}
-                  onChange={(e) => setSelectedIncidentForNew(e.target.value)}
+                  onChange={(e) => {
+                    const incId = e.target.value;
+                    setSelectedIncidentForNew(incId);
+                    setLastActiveIncidentId(incId);
+                    const match = reports.find((r) => r.incident_id === incId);
+                    if (match) setSelectedReport(match);
+                  }}
                   className="w-full bg-bone border border-sand rounded-control px-3.5 h-11 text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-canopy text-xs font-medium cursor-pointer"
                 >
                   {incidents.map((inc) => (
                     <option key={inc.id} value={inc.id}>
-                      {inc.id} — {inc.jurisdiction} ({inc.affected_area_ha} ha)
+                      {inc.id} — {inc.jurisdiction} ({inc.affected_area_ha} ha) {inc.drone_mission_ref ? "✦ [Drone Evidence Linked]" : ""}
                     </option>
                   ))}
                 </select>
@@ -989,22 +1099,69 @@ function ReportsContent() {
                         </span>
                         <span className="font-mono text-[10px] text-canopy font-bold">{droneMission}</span>
                       </div>
-                      <div className="relative h-48 bg-stone-900 overflow-hidden">
-                        <img
-                          src="/imagery/drone-aerial-orthomosaic.jpg"
-                          alt="Drone Reconnaissance Footage"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-critical/90 text-white font-mono text-[9px] font-bold tracking-wider rounded border border-white/30">
-                          3 TARGETS DETECTED
+                      {droneImageSrc ? (
+                        <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full max-h-[380px] bg-stone-900 overflow-hidden">
+                          <img
+                            src={droneImageSrc}
+                            alt="Drone Reconnaissance Footage"
+                            className="w-full h-full object-cover object-center"
+                          />
+                          {/* Dynamic High-Contrast Bounding Box Overlays */}
+                          {plateDetections.map((t, idx) => {
+                            const box = t.box;
+                            if (!box || box.length !== 4) return null;
+                            const top = `${(box[0] * 100).toFixed(1)}%`;
+                            const left = `${(box[1] * 100).toFixed(1)}%`;
+                            const height = `${((box[2] - box[0]) * 100).toFixed(1)}%`;
+                            const width = `${((box[3] - box[1]) * 100).toFixed(1)}%`;
+                            return (
+                              <div
+                                key={idx}
+                                style={{ top, left, width, height }}
+                                className="absolute rounded border-2 border-signal bg-signal/15 pointer-events-none transition-all shadow-sm z-10"
+                              >
+                                <span className="absolute -top-5 left-0 font-mono text-[9px] font-bold bg-signal text-white px-1.5 py-0.5 rounded shadow whitespace-nowrap">
+                                  {(t.label || t.class || "TARGET").toUpperCase()} {Math.round((t.confidence || t.conf || 0.9) * 100)}%
+                                </span>
+                              </div>
+                            );
+                          })}
+                          <div className="absolute top-2 right-2 px-2 py-0.5 bg-critical/90 text-white font-mono text-[9px] font-bold tracking-wider rounded border border-white/30 z-20 shadow">
+                            {selectedReport.machinery_detected.length > 0
+                              ? `${selectedReport.machinery_detected.length} TARGETS DETECTED`
+                              : (plateDetections.length > 0 ? `${plateDetections.length} TARGETS DETECTED` : "OPTICAL FEED ATTESTED")}
+                          </div>
+                          <div className="absolute bottom-2 left-2 right-2 bg-ink-900/85 backdrop-blur-sm text-bone p-2 rounded text-[9px] font-mono flex items-center justify-between border-l-2 border-canopy z-20 shadow">
+                            <span>ALT: 120m AGL · RTK GPS: {lat.toFixed(4)}°N, {lng.toFixed(4)}°E</span>
+                            <span className="text-[#57B67E]">Grounding DINO + SAM-2</span>
+                          </div>
                         </div>
-                        <div className="absolute bottom-2 left-2 right-2 bg-ink-900/80 backdrop-blur-sm text-bone p-2 rounded text-[9px] font-mono flex items-center justify-between border-l-2 border-canopy">
-                          <span>ALT: 120m AGL · RTK GPS: {lat.toFixed(4)}°N, {lng.toFixed(4)}°E</span>
-                          <span className="text-[#57B67E]">Grounding DINO + SAM-2</span>
+                      ) : (
+                        <div className="aspect-[16/10] sm:aspect-[16/9] w-full max-h-[380px] bg-[#0D1C15] flex flex-col items-center justify-center p-4 text-center border-b border-sand select-none relative overflow-hidden">
+                          <Crosshair className="h-6 w-6 text-signal/60 mb-2 animate-pulse" />
+                          <div className="font-mono text-xs font-bold text-moss-200">
+                            TACTICAL HUD: AWAITING AERIAL SORTIE FEED
+                          </div>
+                          <div className="text-[10px] text-moss-400 mt-1 max-w-xs">
+                            No verified drone reconnaissance orthomosaic has been linked to this docket yet.
+                          </div>
+                          {relatedIncident && (
+                            <a
+                              href={`/drone?incident_id=${relatedIncident.id}&lat=${lat}&lng=${lng}`}
+                              className="mt-3 btn btn-secondary text-[10px] h-6 px-2.5 flex items-center gap-1 font-mono"
+                            >
+                              <span>Dispatch Aerial Sortie</span>
+                              <span>&rarr;</span>
+                            </a>
+                          )}
                         </div>
-                      </div>
+                      )}
                       <div className="p-3 text-[11px] text-ink-600 flex-1">
-                        Ultra-high-definition aerial orthomosaic resolving active Komatsu PC200 hydraulic excavator and timber hauler transport operating inside core protection boundaries.
+                        {selectedReport.machinery_detected.length > 0
+                          ? `Aerial orthomosaic capture at 120m AGL. Machine learning bounding box model resolved active ${selectedReport.machinery_detected.join(", ")}.`
+                          : (droneImageSrc
+                              ? "Ultra-high-definition aerial orthomosaic verified. Zero unauthorized machinery targets detected in survey swath."
+                              : "Aerial drone reconnaissance has not yet been scheduled or uploaded for this legal boundary.")}
                       </div>
                     </div>
 
@@ -1017,11 +1174,11 @@ function ReportsContent() {
                         </span>
                         <span className="font-mono text-[10px] text-canopy font-bold">10m DYNAMIC WORLD</span>
                       </div>
-                      <div className="relative h-48 bg-stone-900 overflow-hidden">
+                      <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full max-h-[380px] bg-stone-900 overflow-hidden">
                         <img
                           src="/imagery/satellite-recent.jpg"
                           alt="Sentinel-2 Multispectral Disturbance"
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover object-center"
                         />
                         <div className="absolute top-2 right-2 px-2 py-0.5 bg-canopy/90 text-white font-mono text-[9px] font-bold tracking-wider rounded border border-white/30">
                           ΔNDVI: -0.42
@@ -1057,19 +1214,27 @@ function ReportsContent() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-sand bg-bone font-mono text-[11px]">
-                        {selectedReport.machinery_detected.map((mach, idx) => (
-                          <tr key={idx} className="hover:bg-paper transition-colors">
-                            <td className="py-2.5 px-3 font-bold text-ink-600">0{idx + 1}</td>
-                            <td className="py-2.5 px-3 font-sans font-bold text-critical">{mach}</td>
-                            <td className="py-2.5 px-3 text-ink-600">Aerial Optical CV (94% Conf)</td>
-                            <td className="py-2.5 px-3 text-ink-900">{lat.toFixed(4)}°N, {lng.toFixed(4)}°E</td>
-                            <td className="py-2.5 px-3">
-                              <span className="px-2 py-0.5 rounded bg-critical-soft text-critical font-bold text-[10px] border border-critical/30">
-                                SEIZED IN SITU
-                              </span>
+                        {selectedReport.machinery_detected.length > 0 ? (
+                          selectedReport.machinery_detected.map((mach, idx) => (
+                            <tr key={idx} className="hover:bg-paper transition-colors">
+                              <td className="py-2.5 px-3 font-bold text-ink-600">0{idx + 1}</td>
+                              <td className="py-2.5 px-3 font-sans font-bold text-critical">{mach}</td>
+                              <td className="py-2.5 px-3 text-ink-600">Aerial Optical CV (Grounding DINO + SAM 2)</td>
+                              <td className="py-2.5 px-3 text-ink-900">{lat.toFixed(4)}°N, {lng.toFixed(4)}°E</td>
+                              <td className="py-2.5 px-3">
+                                <span className="px-2 py-0.5 rounded bg-critical-soft text-critical font-bold text-[10px] border border-critical/30">
+                                  SEIZED IN SITU
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="py-4 px-3 text-center text-ink-600 font-sans italic">
+                              Zero heavy logging machinery targets detected in survey perimeter. Visual ground survey verified.
                             </td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>

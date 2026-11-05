@@ -22,6 +22,17 @@ import {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
+export function getFullMediaUrl(url?: string | null): string {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("blob:") || url.startsWith("data:")) {
+    return url;
+  }
+  if (url.startsWith("/api/drone/media/")) {
+    return `${API_BASE}${url}`;
+  }
+  return url;
+}
+
 // Local in-memory caches to allow local mutation when backend is offline
 let cachedIncidents = [...INITIAL_INCIDENTS];
 let cachedReports = [...INITIAL_REPORTS];
@@ -192,6 +203,12 @@ export async function runDroneDetection(
   return await res.json();
 }
 
+export async function getDroneRecord(mediaId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/drone/record/${mediaId}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Drone record fetch failed with status ${res.status}`);
+  return await res.json();
+}
+
 export async function getFusedEvidence(incidentId: string): Promise<EvidenceFusionData> {
   try {
     const res = await fetch(`${API_BASE}/api/evidence/fuse/${incidentId}`, { cache: "no-store" });
@@ -230,9 +247,11 @@ export async function getFusedEvidence(incidentId: string): Promise<EvidenceFusi
 
 export async function getReports(): Promise<ReportItem[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/reports`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE}/api/reports?include_demo=true`, { cache: "no-store" });
     if (!res.ok) throw new Error("Reports fetch failed");
-    return await res.json();
+    const reports = await res.json();
+    cachedReports = reports;
+    return reports;
   } catch {
     return cachedReports;
   }
@@ -489,7 +508,7 @@ export async function getGfwStatus(): Promise<{ status: string; connected: boole
     if (!res.ok) throw new Error("GFW status fetch failed");
     return await res.json();
   } catch {
-    return { status: "nominal", connected: true, active_feeds: 3 };
+    return { status: "offline", connected: false, active_feeds: 0 };
   }
 }
 

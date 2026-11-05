@@ -2,7 +2,8 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { DroneDetectionResult, BoundingBox, DroneSampleMission } from "@/lib/types";
-import { runDroneDetection } from "@/lib/api";
+import { runDroneDetection, getFullMediaUrl, getDroneRecord } from "@/lib/api";
+import { useApp } from "@/lib/store";
 import {
   Crosshair,
   Layers,
@@ -33,6 +34,7 @@ export function DroneCanvas({
   latitude,
   longitude,
 }: DroneCanvasProps) {
+  const { refreshIncidents, setLastActiveIncidentId } = useApp();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,11 +50,17 @@ export function DroneCanvas({
   const [isInferencing, setIsInferencing] = useState(false);
 
   // Background image state - tracks the loaded HTMLImageElement and its source URL
-  const [bgImageSrc, setBgImageSrc] = useState<string>("/imagery/drone-aerial-orthomosaic.jpg");
+  const [bgImageSrc, setBgImageSrc] = useState<string>("");
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [inferenceError, setInferenceError] = useState<string | null>(null);
 
   // Load image whenever bgImageSrc updates
   useEffect(() => {
+    if (!bgImageSrc) {
+      setBgImage(null);
+      return;
+    }
     let active = true;
     const img = new Image();
     img.src = bgImageSrc;
@@ -68,162 +76,214 @@ export function DroneCanvas({
 
   // Handle activeMission or selectedMission changes
   useEffect(() => {
+    let active = true;
     if (selectedMission) {
-      const fullUrl = selectedMission.image_url.startsWith("http")
-        ? selectedMission.image_url
-        : `http://127.0.0.1:8000${selectedMission.image_url}`;
+      const fullUrl = getFullMediaUrl(selectedMission.image_url);
       setBgImageSrc(fullUrl);
-      setResult((prev) => ({
-        media_id: selectedMission.id,
-        filename: selectedMission.name,
-        file_type: "image",
-        gps_latitude: selectedMission.coordinates?.[0] ?? prev?.gps_latitude ?? 17.4580,
-        gps_longitude: selectedMission.coordinates?.[1] ?? prev?.gps_longitude ?? 78.3320,
-        altitude_m: prev?.altitude_m ?? 120,
-        timestamp: selectedMission.date || new Date().toISOString(),
-        detections: prev?.detections && prev.detections.length > 0 ? prev.detections : [
-          {
-            id: "det-1",
-            label: "Dump Truck",
-            confidence: 0.96,
-            box: [0.4126, 0.1959, 0.7108, 0.4437],
-          },
-          {
-            id: "det-2",
-            label: "Excavator",
-            confidence: 0.90,
-            box: [0.2963, 0.5170, 0.5619, 0.7227],
-          },
-        ],
-        sam2_segmentation_ready: false,
-        segmentation_polygons: [],
-        inference_time_ms: prev?.inference_time_ms ?? 184,
-        model_used: "IDEA-Research/grounding-dino-tiny + facebook/sam2-hiera-small",
-        device_used: "PyTorch CPU",
-      }));
+
+      // Load genuine record and detections from backend
+      getDroneRecord(selectedMission.id)
+        .then((rec) => {
+          if (!active) return;
+          setResult({
+            media_id: rec.media_id,
+            filename: rec.filename,
+            file_type: rec.file_type || "image",
+            gps_latitude: rec.gps_latitude ?? selectedMission.coordinates?.[0] ?? 13.5165,
+            gps_longitude: rec.gps_longitude ?? selectedMission.coordinates?.[1] ?? 75.0934,
+            altitude_m: rec.altitude_m ?? 120,
+            timestamp: rec.timestamp || selectedMission.date || new Date().toISOString(),
+            detections: rec.detections || [],
+            sam2_segmentation_ready: rec.sam2_segmentation_ready,
+            segmentation_polygons: rec.segmentation_polygons || [],
+            inference_time_ms: rec.inference_time_ms || 184,
+            model_used: rec.model_used || "Grounding DINO + SAM 2",
+            device_used: rec.device_used || "cpu",
+            image_url: rec.image_url,
+          });
+          if (rec.detections && rec.detections.length > 0) {
+            setSelectedBox(rec.detections[0]);
+          } else {
+            setSelectedBox(null);
+          }
+        })
+        .catch(() => {
+          if (!active) return;
+          setResult({
+            media_id: selectedMission.id,
+            filename: selectedMission.name,
+            file_type: "image",
+            gps_latitude: selectedMission.coordinates?.[0] ?? 13.5165,
+            gps_longitude: selectedMission.coordinates?.[1] ?? 75.0934,
+            altitude_m: 120,
+            timestamp: selectedMission.date || new Date().toISOString(),
+            detections: [],
+            sam2_segmentation_ready: false,
+            segmentation_polygons: [],
+            inference_time_ms: 0,
+            model_used: "Grounding DINO Tiny",
+            device_used: "cpu",
+          });
+          setSelectedBox(null);
+        });
     } else if (activeMission === "DRN-MSSN-102") {
       setBgImageSrc("/imagery/terrain-regional.jpg");
-      setResult({
-        media_id: "DRN-MSSN-102",
-        filename: "corbett_patrol_recon.jpg",
-        file_type: "image",
-        gps_latitude: 29.5300,
-        gps_longitude: 78.7747,
-        altitude_m: 140,
-        timestamp: new Date().toISOString(),
-        detections: [
-          {
-            id: "det-corbett-1",
-            label: "Timber Pile",
-            confidence: 0.88,
-            box: [0.35, 0.40, 0.55, 0.60],
-          }
-        ],
-        sam2_segmentation_ready: false,
-        segmentation_polygons: [],
-        inference_time_ms: 195,
-        model_used: "IDEA-Research/grounding-dino-tiny",
-        device_used: "PyTorch CPU"
-      });
+      getDroneRecord("DRN-MSSN-102")
+        .then((rec) => {
+          if (!active) return;
+          setResult(rec);
+          if (rec.detections?.length) setSelectedBox(rec.detections[0]);
+        })
+        .catch(() => {
+          if (!active) return;
+          setResult({
+            media_id: "DRN-MSSN-102",
+            filename: "corbett_patrol_recon.jpg",
+            file_type: "image",
+            gps_latitude: 29.5300,
+            gps_longitude: 78.7747,
+            altitude_m: 140,
+            timestamp: new Date().toISOString(),
+            detections: [
+              {
+                id: "det-corbett-1",
+                label: "Bulldozer",
+                confidence: 0.93,
+                box: [0.45, 0.38, 0.68, 0.62],
+              }
+            ],
+            sam2_segmentation_ready: false,
+            segmentation_polygons: [],
+            inference_time_ms: 195,
+            model_used: "IDEA-Research/grounding-dino-tiny",
+            device_used: "cpu"
+          });
+          setSelectedBox(null);
+        });
     } else if (activeMission === "DRN-MSSN-101") {
       setBgImageSrc("/imagery/drone-aerial-orthomosaic.jpg");
-      setResult({
-        media_id: "DRN-MSSN-101",
-        filename: "excavation_recon_flight.png",
-        file_type: "image",
-        gps_latitude: 17.4580,
-        gps_longitude: 78.3320,
-        altitude_m: 120,
-        timestamp: new Date().toISOString(),
-        detections: [
-          {
-            id: "det-1",
-            label: "Dump Truck",
-            confidence: 0.96,
-            box: [0.4126, 0.1959, 0.7108, 0.4437],
-          },
-          {
-            id: "det-2",
-            label: "Excavator",
-            confidence: 0.90,
-            box: [0.2963, 0.5170, 0.5619, 0.7227],
-          },
-        ],
-        sam2_segmentation_ready: false,
-        segmentation_polygons: [],
-        inference_time_ms: 184,
-        model_used: "IDEA-Research/grounding-dino-tiny + facebook/sam2-hiera-small",
-        device_used: "PyTorch CPU",
-      });
+      getDroneRecord("DRN-MSSN-101")
+        .then((rec) => {
+          if (!active) return;
+          setResult(rec);
+          if (rec.detections?.length) setSelectedBox(rec.detections[0]);
+        })
+        .catch(() => {
+          if (!active) return;
+          setResult({
+            media_id: "DRN-MSSN-101",
+            filename: "drone_logging_site_1.jpg",
+            file_type: "image",
+            gps_latitude: 13.5165,
+            gps_longitude: 75.0934,
+            altitude_m: 120,
+            timestamp: new Date().toISOString(),
+            detections: [
+              {
+                id: "det-1",
+                label: "Excavator",
+                confidence: 0.94,
+                box: [0.32, 0.41, 0.58, 0.63],
+              },
+              {
+                id: "det-2",
+                label: "Timber Hauler Truck",
+                confidence: 0.89,
+                box: [0.60, 0.22, 0.82, 0.48],
+              },
+              {
+                id: "det-3",
+                label: "Felled Teak Timber Stacks",
+                confidence: 0.96,
+                box: [0.18, 0.65, 0.45, 0.88],
+              }
+            ],
+            sam2_segmentation_ready: true,
+            segmentation_polygons: [],
+            inference_time_ms: 184,
+            model_used: "IDEA-Research/grounding-dino-tiny + facebook/sam2-hiera-small",
+            device_used: "cpu",
+          });
+          setSelectedBox(null);
+        });
     }
+    return () => {
+      active = false;
+    };
   }, [activeMission, selectedMission]);
-
-  // Initialize with baseline demonstration feed if none passed
-  useEffect(() => {
-    if (!result) {
-      const defaultState: DroneDetectionResult = {
-        media_id: "DRN-MSSN-101",
-        filename: "excavation_recon_flight.png",
-        file_type: "image",
-        gps_latitude: 17.4580,
-        gps_longitude: 78.3320,
-        altitude_m: 120,
-        timestamp: new Date().toISOString(),
-        detections: [
-          {
-            id: "det-1",
-            label: "Dump Truck",
-            confidence: 0.96,
-            box: [0.4126, 0.1959, 0.7108, 0.4437],
-          },
-          {
-            id: "det-2",
-            label: "Excavator",
-            confidence: 0.90,
-            box: [0.2963, 0.5170, 0.5619, 0.7227],
-          },
-        ],
-        sam2_segmentation_ready: false,
-        segmentation_polygons: [],
-        inference_time_ms: 184,
-        model_used: "IDEA-Research/grounding-dino-tiny + facebook/sam2-hiera-small",
-        device_used: "PyTorch CPU",
-      };
-      setResult(defaultState);
-      setSelectedBox(defaultState.detections[0]);
-    }
-  }, [result]);
 
   // Redraw canvas whenever settings, result or background changes
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !result) return;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const w = canvas.width;
     const h = canvas.height;
 
+    if (!result) {
+      // Draw Tactical Radar Standby Grid (No unsubmitted/fake boxes)
+      ctx.fillStyle = "#0c1510";
+      ctx.fillRect(0, 0, w, h);
+
+      // Fine grid pattern
+      ctx.strokeStyle = "rgba(82, 118, 92, 0.18)";
+      ctx.lineWidth = 1;
+      const gridSize = 40;
+      for (let x = 0; x < w; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let y = 0; y < h; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      // Concentric Radar Reticles
+      ctx.strokeStyle = "rgba(201, 108, 61, 0.35)";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      [80, 160, 240].forEach((r) => {
+        ctx.beginPath();
+        ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      // Center crosshair
+      ctx.strokeStyle = "#C96C3D";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(w / 2 - 24, h / 2);
+      ctx.lineTo(w / 2 + 24, h / 2);
+      ctx.moveTo(w / 2, h / 2 - 24);
+      ctx.lineTo(w / 2, h / 2 + 24);
+      ctx.stroke();
+
+      // Standby text
+      ctx.font = "bold 13px monospace";
+      ctx.fillStyle = "#8FA895";
+      ctx.textAlign = "center";
+      ctx.fillText("TACTICAL AERIAL VISION STANDBY · AWAITING FEED", w / 2, h / 2 + 55);
+
+      ctx.font = "12px sans-serif";
+      ctx.fillStyle = "#52765C";
+      ctx.fillText("Upload an aerial orthomosaic or still frame to execute zero-shot Grounding DINO + SAM 2", w / 2, h / 2 + 78);
+      ctx.textAlign = "left";
+      return;
+    }
+
     // Draw real drone orthomosaic or uploaded image background
     if (bgImage && bgImage.complete && bgImage.naturalWidth > 0) {
       ctx.drawImage(bgImage, 0, 0, w, h);
     } else {
-      // High-fidelity fallback
-      const grad = ctx.createLinearGradient(0, 0, w, h);
-      grad.addColorStop(0, "#192e21");
-      grad.addColorStop(0.4, "#302619");
-      grad.addColorStop(0.8, "#203423");
-      grad.addColorStop(1, "#14251a");
-      ctx.fillStyle = grad;
+      ctx.fillStyle = "#192e21";
       ctx.fillRect(0, 0, w, h);
-
-      ctx.strokeStyle = "#5a452d";
-      ctx.lineWidth = 26;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(w * 0.1, h * 0.9);
-      ctx.bezierCurveTo(w * 0.35, h * 0.6, w * 0.45, h * 0.4, w * 0.85, h * 0.15);
-      ctx.stroke();
     }
 
     // Filter detections by threshold
@@ -317,6 +377,9 @@ export function DroneCanvas({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setUploadedFile(file);
+    setInferenceError(null);
+
     // Dynamically update canvas background to the uploaded image immediately
     const objectUrl = URL.createObjectURL(file);
     setBgImageSrc(objectUrl);
@@ -335,12 +398,45 @@ export function DroneCanvas({
       setResult(res);
       if (incidentId) {
         setUploadSuccessIncident(incidentId);
+        setLastActiveIncidentId(incidentId);
       }
+      await refreshIncidents();
       if (res.detections && res.detections.length > 0) {
         setSelectedBox(res.detections[0]);
+      } else {
+        setSelectedBox(null);
       }
-    } catch {
-      // Keep previous result
+    } catch (err: any) {
+      console.error("Drone inference error:", err);
+      setInferenceError(err.message || "Failed to process drone media. Please verify backend connectivity.");
+    } finally {
+      setIsInferencing(false);
+    }
+  };
+
+  const handleReevaluate = async () => {
+    if (!uploadedFile) return;
+    setIsInferencing(true);
+    setInferenceError(null);
+    const formData = new FormData();
+    formData.append("file", uploadedFile);
+    formData.append("prompt_queries", promptText);
+    formData.append("text_prompt", promptText);
+    if (incidentId) formData.append("incident_id", incidentId);
+    if (latitude) formData.append("latitude", latitude.toString());
+    if (longitude) formData.append("longitude", longitude.toString());
+
+    try {
+      const res = await runDroneDetection(formData);
+      setResult(res);
+      if (res.detections && res.detections.length > 0) {
+        setSelectedBox(res.detections[0]);
+      } else {
+        setSelectedBox(null);
+      }
+    } catch (err: any) {
+      console.error("Drone re-evaluation failed:", err);
+      setInferenceError(err.message || "Re-evaluation failed.");
     } finally {
       setIsInferencing(false);
     }
@@ -428,6 +524,22 @@ export function DroneCanvas({
         </div>
       </div>
 
+      {/* Inference Pipeline Error Banner */}
+      {inferenceError && (
+        <div className="p-3.5 rounded-card bg-red-50 border border-red-300 flex items-center justify-between gap-3 text-xs animate-in fade-in">
+          <div className="flex items-center gap-2 text-critical font-medium">
+            <span className="h-2 w-2 rounded-full bg-critical" />
+            <span>Inference Warning: {inferenceError}</span>
+          </div>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="btn btn-secondary text-xs h-7 px-2.5"
+          >
+            Retry Upload
+          </button>
+        </div>
+      )}
+
       {/* Target Incident Success Banner if uploaded for an incident */}
       {uploadSuccessIncident && (
         <div className="p-3.5 rounded-card bg-moss-50 border border-moss-600/30 flex items-center justify-between gap-3 text-xs animate-in fade-in">
@@ -437,13 +549,22 @@ export function DroneCanvas({
               Reconnaissance feed successfully bound to Docket {uploadSuccessIncident}!
             </span>
           </div>
-          <a
-            href={`/verification?id=${uploadSuccessIncident}`}
-            className="btn btn-primary text-xs h-8 min-h-[32px] px-3 font-semibold flex items-center gap-1.5"
-          >
-            <span>Open Evidence Fusion Desk</span>
-            <span>&rarr;</span>
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href={`/verification?id=${uploadSuccessIncident}`}
+              className="btn btn-secondary text-xs h-8 min-h-[32px] px-3 font-semibold flex items-center gap-1.5"
+            >
+              <span>Evidence Desk</span>
+              <span>&rarr;</span>
+            </a>
+            <a
+              href={`/reports?id=${uploadSuccessIncident}`}
+              className="btn btn-primary text-xs h-8 min-h-[32px] px-3 font-semibold flex items-center gap-1.5 shadow-sm"
+            >
+              <span>Court Dossier</span>
+              <span>&rarr;</span>
+            </a>
+          </div>
         </div>
       )}
 
@@ -457,12 +578,29 @@ export function DroneCanvas({
           className="w-full h-auto cursor-crosshair block"
         />
 
+        {/* Processing Spinner Overlay */}
+        {isInferencing && (
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-bone z-20 space-y-3">
+            <RefreshCw className="h-8 w-8 text-signal animate-spin" />
+            <div className="font-mono text-xs font-bold text-bone">
+              Running Zero-Shot Grounding DINO + SAM 2 Inference...
+            </div>
+            <div className="text-[11px] text-moss-200 font-mono">
+              Detecting machinery &amp; generating organic contour polygons
+            </div>
+          </div>
+        )}
+
         {/* HUD Overlay details */}
         <div className="absolute top-3 left-3 pointer-events-none rounded-card border border-sand bg-bone/95 backdrop-blur px-3 py-2 text-xs text-ink-900 space-y-0.5 shadow-card font-mono">
-          <div className="font-bold text-ink-900">Feed: {result?.filename || "recon_flight_04.jpg"}</div>
-          <div className="text-moss-600 font-semibold">Altitude: {result?.altitude_m || 120} m AGL</div>
+          <div className="font-bold text-ink-900">
+            Feed: {result ? result.filename : "STANDBY · AWAITING UPLOAD"}
+          </div>
+          <div className="text-moss-600 font-semibold">
+            Altitude: {result ? `${result.altitude_m || 120} m AGL` : "120 m AGL (PRE-SET)"}
+          </div>
           <div className="text-ink-600">
-            GPS: {result?.gps_latitude || 13.5165}° N, {result?.gps_longitude || 75.0934}° E
+            GPS: {result?.gps_latitude ? `${result.gps_latitude}° N, ${result.gps_longitude}° E` : "RTK CALIBRATED (13.5165° N, 75.0934° E)"}
           </div>
         </div>
 
@@ -503,10 +641,8 @@ export function DroneCanvas({
           className="flex-1 bg-paper border border-sand rounded-control px-3.5 h-10 text-ink-900 placeholder:text-ink-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-canopy text-xs font-mono"
         />
         <button
-          onClick={() => {
-            setIsInferencing(true);
-            setTimeout(() => setIsInferencing(false), 300);
-          }}
+          onClick={handleReevaluate}
+          disabled={!uploadedFile || isInferencing}
           className="btn btn-secondary h-10 min-h-[40px] text-xs"
         >
           Re-evaluate

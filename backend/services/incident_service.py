@@ -141,15 +141,21 @@ class IncidentService:
         ev_type_lower = evidence_type.lower()
 
         if ev_type_lower in ("drone", "drone_media"):
-            drone_row = query_one("SELECT id FROM drone_media WHERE id = ?", (evidence_id,))
+            drone_row = query_one(
+                "SELECT id FROM drone_media WHERE id = ? OR filename = ? OR id LIKE ? LIMIT 1",
+                (evidence_id, evidence_id, f"%{evidence_id}%")
+            )
             if not drone_row:
                 raise HTTPException(status_code=404, detail=f"Drone media '{evidence_id}' does not exist.")
-            drone_ref = evidence_id
+            drone_ref = drone_row["id"]
         elif ev_type_lower in ("disturbance", "satellite"):
-            dist_row = query_one("SELECT id FROM disturbances WHERE id = ?", (evidence_id,))
+            dist_row = query_one(
+                "SELECT id FROM disturbances WHERE id = ? OR id LIKE ? LIMIT 1",
+                (evidence_id, f"%{evidence_id}%")
+            )
             if not dist_row:
                 raise HTTPException(status_code=404, detail=f"Disturbance '{evidence_id}' does not exist.")
-            dist_ref = evidence_id
+            dist_ref = dist_row["id"]
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported evidence_type '{evidence_type}'. Must be 'drone' or 'disturbance'.")
 

@@ -4,6 +4,7 @@ import React, { useState, Suspense } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { DroneCanvas } from "@/components/drone/DroneCanvas";
 import { useSearchParams } from "next/navigation";
+import { useApp } from "@/lib/store";
 import {
   Crosshair,
   Plane,
@@ -25,10 +26,19 @@ function DroneVisionContent() {
   const targetLat = searchParams.get("lat");
   const targetLng = searchParams.get("lng");
 
-  const [activeMission, setActiveMission] = useState(
-    targetIncident ? `SORTIE-${targetIncident}` : "DRN-MSSN-101"
+  const { incidents } = useApp();
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string>(
+    targetIncident || incidents[0]?.id || "AS-2026-088"
+  );
+
+  const [activeMission, setActiveMission] = useState<string | null>(
+    targetIncident ? `SORTIE-${targetIncident}` : null
   );
   const [selectedMission, setSelectedMission] = useState<DroneSampleMission | null>(null);
+
+  const activeInc = incidents.find((i) => i.id === selectedIncidentId);
+  const effectiveLat = activeInc?.coordinates?.[0] ?? (targetLat ? parseFloat(targetLat) : 13.5165);
+  const effectiveLng = activeInc?.coordinates?.[1] ?? (targetLng ? parseFloat(targetLng) : 75.0934);
 
   return (
     <AppShell>
@@ -46,33 +56,47 @@ function DroneVisionContent() {
           }
         />
 
-        {/* Targeted Incident Dispatch Banner if launched from Verification */}
-        {targetIncident && (
-          <div className="atlas-card p-4 bg-moss-50 border-moss-600/30 flex items-center justify-between gap-4 flex-wrap animate-in fade-in">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-signal-soft border border-signal/30 flex items-center justify-center text-signal shrink-0">
-                <Target className="h-4 w-4" />
+        {/* Docket Assignment Ribbon */}
+        <div className="atlas-card p-4 bg-bone border-sand flex items-center justify-between gap-4 flex-wrap shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-signal-soft border border-signal/30 flex items-center justify-center text-signal shrink-0">
+              <Target className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-ink-600">
+                Corroborate Incident Docket
               </div>
-              <div>
-                <div className="font-bold text-ink-900 text-xs flex items-center gap-2">
-                  <span>Target Reconnaissance Mission for Docket {targetIncident}</span>
-                  <StatusBadge label="Target Locked" variant="verified" size="sm" />
-                </div>
-                <div className="text-[11px] text-ink-600 mt-0.5 font-mono">
-                  Coordinates: {targetLat || "13.5165"}° N, {targetLng || "75.0934"}° E · Upload aerial survey feed below to corroborate satellite canopy loss.
-                </div>
+              <div className="text-xs text-ink-900 font-semibold mt-0.5">
+                Uploaded aerial media and AI detections will be saved to storage and linked to this case docket.
               </div>
             </div>
-
-            <Link
-              href={`/verification?id=${targetIncident}`}
-              className="btn btn-secondary text-xs h-8 min-h-[32px] flex items-center gap-1.5"
-            >
-              <span>Back to Evidence Fusion Desk</span>
-              <ArrowRight className="h-3 w-3" />
-            </Link>
           </div>
-        )}
+
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <select
+              value={selectedIncidentId}
+              onChange={(e) => setSelectedIncidentId(e.target.value)}
+              className="bg-paper-100 border border-sand rounded-control px-3 h-10 text-xs font-semibold text-ink-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-canopy-900 cursor-pointer min-w-[260px]"
+            >
+              <option value="">Standalone Reconnaissance (No Docket)</option>
+              {incidents.map((inc) => (
+                <option key={inc.id} value={inc.id}>
+                  {inc.id} — {inc.title} ({inc.jurisdiction})
+                </option>
+              ))}
+            </select>
+
+            {selectedIncidentId && (
+              <Link
+                href={`/verification?id=${selectedIncidentId}`}
+                className="btn btn-secondary text-xs h-10 min-h-[40px] px-3 flex items-center gap-1.5"
+              >
+                <span>Evidence Desk</span>
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            )}
+          </div>
+        </div>
 
         {/* Mission Switcher Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
@@ -109,7 +133,7 @@ function DroneVisionContent() {
 
         {/* Recent Drone Missions Gallery from Database */}
         <DroneMissionsGallery
-          activeMissionId={activeMission}
+          activeMissionId={activeMission || undefined}
           onSelectMission={(m) => {
             setActiveMission(m.id);
             setSelectedMission(m);
@@ -118,11 +142,11 @@ function DroneVisionContent() {
 
         {/* Main Drone Canvas Studio */}
         <DroneCanvas
-          activeMission={activeMission}
+          activeMission={activeMission || undefined}
           selectedMission={selectedMission}
-          incidentId={targetIncident || undefined}
-          latitude={targetLat ? parseFloat(targetLat) : undefined}
-          longitude={targetLng ? parseFloat(targetLng) : undefined}
+          incidentId={selectedIncidentId || undefined}
+          latitude={effectiveLat}
+          longitude={effectiveLng}
         />
 
         {/* Mission Telemetry & Detections Inventory */}

@@ -1,7 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: process.env.NEXT_BUILD_DIR || ".next",
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  async rewrites() {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
+      },
+    ];
   },
   async redirects() {
     return [
@@ -12,7 +22,7 @@ const nextConfig = {
       },
       {
         source: '/settings',
-        destination: '/admin',
+        destination: '/command',
         permanent: false,
       },
     ];

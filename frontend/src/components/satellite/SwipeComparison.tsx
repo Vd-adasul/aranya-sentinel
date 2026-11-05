@@ -112,21 +112,19 @@ export function SwipeComparison({
                 className="w-full h-full object-cover object-center"
               />
               {activeBand === "dynamic_world" && (
-                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                  <div className="rounded-xl border-2 border-critical bg-critical/30 backdrop-blur-[2px] p-3 px-4 flex items-center justify-center shadow-lift">
-                    <div className="text-center text-xs text-bone font-mono font-bold bg-critical px-3 py-1.5 rounded-full shadow-sm">
-                      49.0% CANOPY LOSS DETECTED (14.8 HA)
-                    </div>
+                <div className="absolute right-12 top-10 bottom-10 w-1/2 rounded-xl border-2 border-critical/80 bg-critical/20 pointer-events-none flex items-center justify-center">
+                  <div className="font-mono text-xs font-bold text-bone bg-critical/95 px-3 py-1 rounded shadow-sm">
+                    Disturbance Envelope: 14.8 ha
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="relative z-10 self-end rounded-full border border-critical/50 bg-bone/95 backdrop-blur px-3 py-1 text-xs text-critical font-bold font-mono shadow-sm">
-              AFTER: 25 OCT 2026 (SENTINEL-2A)
+            <div className="relative z-10 self-end rounded-full border border-critical/50 bg-bone/95 backdrop-blur px-3 py-1 text-xs text-critical font-semibold font-mono shadow-sm">
+              Recent: 25 Oct 2026 (Sentinel-2A)
             </div>
             <div className="relative z-10 self-end rounded-control border border-sand bg-bone/95 backdrop-blur px-3.5 py-1.5 text-xs text-ink-900 shadow-sm font-sans">
-              Canopy Tree Probability: <span className="text-critical font-bold font-mono">39%</span> (Bare Ground: <span className="font-mono font-bold">44%</span>)
+              Tree Probability: <span className="text-critical font-bold font-mono">39%</span> · Bare Ground: <span className="font-mono font-bold text-signal">44%</span>
             </div>
           </div>
 
@@ -143,20 +141,13 @@ export function SwipeComparison({
                   alt="Baseline Sentinel-2 Observation (11 Oct 2026)"
                   className="w-full h-full object-cover object-center"
                 />
-                {activeBand === "dynamic_world" && (
-                  <div className="absolute inset-0 bg-black/15 flex items-center justify-center">
-                    <div className="text-xs text-bone bg-canopy/90 border border-moss-600/40 px-3.5 py-1.5 rounded-full font-bold shadow-sm backdrop-blur-[2px]">
-                      Intact Rainforest Canopy (88% tree probability)
-                    </div>
-                  </div>
-                )}
               </div>
 
-              <div className="relative z-10 self-start rounded-full border border-moss-600/50 bg-bone/95 backdrop-blur px-3 py-1 text-xs text-moss-600 font-bold font-mono shadow-sm">
-                BEFORE: 11 OCT 2026 (SENTINEL-2B)
+              <div className="relative z-10 self-start rounded-full border border-moss-600/50 bg-bone/95 backdrop-blur px-3 py-1 text-xs text-moss-600 font-semibold font-mono shadow-sm">
+                Baseline: 11 Oct 2026 (Sentinel-2B)
               </div>
               <div className="relative z-10 self-start rounded-control border border-sand bg-bone/95 backdrop-blur px-3.5 py-1.5 text-xs text-ink-900 shadow-sm font-sans">
-                Canopy Tree Probability: <span className="text-moss-600 font-bold font-mono">88%</span> (Bare Ground: <span className="font-mono font-bold">4%</span>)
+                Tree Probability: <span className="text-moss-600 font-bold font-mono">88%</span> · Bare Ground: <span className="font-mono font-bold">4%</span>
               </div>
             </div>
           </div>
@@ -166,7 +157,7 @@ export function SwipeComparison({
             className="absolute inset-y-0 z-30 flex items-center justify-center pointer-events-none"
             style={{ left: `calc(${sliderPosition}% - 14px)` }}
           >
-            <div className="h-11 w-7 rounded-control bg-signal border border-white text-bone flex items-center justify-center shadow-lift pointer-events-auto cursor-ew-resize">
+            <div className="h-10 w-7 rounded-control bg-signal border border-white text-bone flex items-center justify-center shadow-lift pointer-events-auto cursor-ew-resize">
               <span className="text-xs font-bold">⇄</span>
             </div>
           </div>
@@ -193,8 +184,8 @@ export function SwipeComparison({
                 className="w-full h-full object-cover object-center"
               />
             </div>
-            <div className="relative z-10 self-start rounded-full border border-moss-600/50 bg-bone/95 backdrop-blur px-3 py-1 text-xs text-moss-600 font-bold font-mono">
-              BASELINE: 11 OCT 2026
+            <div className="relative z-10 self-start rounded-full border border-moss-600/50 bg-bone/95 backdrop-blur px-3 py-1 text-xs text-moss-600 font-semibold font-mono">
+              Baseline: 11 Oct 2026
             </div>
             <div className="relative z-10 self-start rounded-control border border-sand bg-bone/95 backdrop-blur px-3 py-1.5 text-xs text-ink-900 font-sans">
               Tree Probability: <span className="text-moss-600 font-bold font-mono">88%</span>
@@ -209,8 +200,8 @@ export function SwipeComparison({
                 className="w-full h-full object-cover object-center"
               />
             </div>
-            <div className="relative z-10 self-end rounded-full border border-critical/50 bg-bone/95 backdrop-blur px-3 py-1 text-xs text-critical font-bold font-mono">
-              RECENT: 25 OCT 2026
+            <div className="relative z-10 self-end rounded-full border border-critical/50 bg-bone/95 backdrop-blur px-3 py-1 text-xs text-critical font-semibold font-mono">
+              Recent: 25 Oct 2026
             </div>
             <div className="relative z-10 self-end rounded-control border border-sand bg-bone/95 backdrop-blur px-3 py-1.5 text-xs text-ink-900 font-sans">
               Tree Probability: <span className="text-critical font-bold font-mono">39%</span>

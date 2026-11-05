@@ -37,6 +37,7 @@ class DroneDetectionResult(BaseModel):
     inference_time_ms: float
     model_used: str
     device_used: str
+    image_url: Optional[str] = None
 
 def extract_exif_metadata(image: Image.Image) -> Tuple[Optional[float], Optional[float], Optional[float]]:
     """
@@ -46,7 +47,7 @@ def extract_exif_metadata(image: Image.Image) -> Tuple[Optional[float], Optional
         exif = image._getexif()
         if not exif:
             return None, None, None
-        
+
         from PIL.ExifTags import TAGS, GPSTAGS
         gps_info = {}
         for key, value in exif.items():
@@ -163,7 +164,7 @@ async def analyze_drone_media(
 
     detections = [
         BoundingBox(
-            label=d["label"].capitalize(),
+            label=d["label"].strip(),
             confidence=d["confidence"],
             box=d["box"]
         )
@@ -198,6 +199,21 @@ async def analyze_drone_media(
                 (media_id, incident_id)
             )
 
+    # Generate and cache permanent annotated resultant image with model bounding boxes
+    try:
+        from services.annotation_service import generate_annotated_image
+        generate_annotated_image(media_id, storage_path, [d.dict() for d in detections])
+    except Exception as ann_err:
+        print(f"[Drone] Annotation generation note: {ann_err}")
+
+    # Immediately compile or refresh the legal investigation dossier for this incident
+    if incident_id:
+        try:
+            from services.report_service import report_service
+            report_service.generate_report(incident_id, generated_by="Autonomous Vision Drone Pipeline")
+        except Exception as rep_err:
+            print(f"[Drone] Auto-report generation note: {rep_err}")
+
     return DroneDetectionResult(
         media_id=media_id,
         filename=raw_filename,
@@ -211,24 +227,98 @@ async def analyze_drone_media(
         segmentation_polygons=polygons,
         inference_time_ms=inf_result.get("inference_time_ms", 0.0),
         model_used=inf_result.get("model_used", "Grounding DINO Tiny + SAM 2"),
-        device_used=inf_result.get("device_used", "cpu")
+        device_used=inf_result.get("device_used", "cpu"),
+        image_url=f"/api/drone/media/{media_id}"
     )
 
 @router.get("/media/{media_id}")
-async def get_drone_media_file(media_id: str):
+async def get_drone_media_file(media_id: str, raw: bool = False):
     """
     Retrieves stored drone image by media_id.
+    Serves the annotated resultant image with model bounding boxes by default,
+    or the raw capture if raw=true.
     """
-    row = query_one("SELECT storage_path, filename FROM drone_media WHERE id = ?", (media_id,))
+    clean_id = media_id.replace(".png", "").replace(".jpg", "").replace(".jpeg", "").replace("_annotated", "")
+    row = query_one(
+        "SELECT id, storage_path, filename, detections_json FROM drone_media WHERE id = ? OR id = ? OR filename = ?",
+        (media_id, clean_id, media_id)
+    )
     if not row or not row.get("storage_path"):
         raise HTTPException(status_code=404, detail=f"Drone media '{media_id}' not found.")
-    
+
     path = row["storage_path"]
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Media file missing on disk.")
 
+    canonical_id = row["id"]
+    if not raw:
+        ann_path = os.path.join(settings.drone_dir, f"{canonical_id}_annotated.jpg")
+        if not os.path.exists(ann_path):
+            try:
+                from services.annotation_service import generate_annotated_image
+                dets = json.loads(row["detections_json"]) if row.get("detections_json") else []
+                generate_annotated_image(canonical_id, path, dets)
+            except Exception as e:
+                print(f"[Drone] On-demand annotation failed: {e}")
+        if os.path.exists(ann_path):
+            return FileResponse(
+                ann_path,
+                media_type="image/jpeg",
+                headers={
+                    "Content-Disposition": "inline",
+                    "Cache-Control": "public, max-age=120"
+                }
+            )
+
     media_type = "image/jpeg" if path.lower().endswith((".jpg", ".jpeg")) else "image/png"
-    return FileResponse(path, media_type=media_type, filename=row["filename"])
+    return FileResponse(
+        path,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": "inline",
+            "Cache-Control": "public, max-age=120"
+        }
+    )
+
+@router.get("/record/{media_id}")
+async def get_drone_media_record(media_id: str):
+    """
+    Retrieves full metadata and detections for a specific drone media ID.
+    """
+    row = query_one("SELECT * FROM drone_media WHERE id = ?", (media_id,))
+    if not row:
+        raise HTTPException(status_code=404, detail=f"Drone media '{media_id}' not found.")
+
+    dets = []
+    try:
+        dets = json.loads(row["detections_json"])
+    except Exception:
+        pass
+
+    polys = []
+    try:
+        polys = json.loads(row["polygons_json"]) if row.get("polygons_json") else []
+    except Exception:
+        pass
+
+    return {
+        "media_id": row["id"],
+        "filename": row["filename"],
+        "file_type": row["file_type"],
+        "sha256_hash": row["sha256_hash"],
+        "gps_latitude": row["gps_latitude"],
+        "gps_longitude": row["gps_longitude"],
+        "altitude_m": row["altitude_m"],
+        "timestamp": row["timestamp"],
+        "detections": dets,
+        "sam2_segmentation_ready": bool(row.get("sam2_ready", 0)),
+        "segmentation_polygons": polys,
+        "inference_time_ms": row.get("inference_time_ms", 0.0),
+        "model_used": row.get("model_used", ""),
+        "device_used": row.get("device_used", ""),
+        "image_url": f"/api/drone/media/{row['id']}",
+        "is_demo": bool(row.get("is_demo", 0))
+    }
 
 @router.get("/status")
 async def get_model_status():

@@ -56,7 +56,7 @@ export default function PublicTransparencyPage() {
           actions={
             <div className="flex items-center gap-2 text-xs text-canopy font-semibold">
               <Shield className="h-4 w-4 text-moss-600" />
-              <span>Community Intake Active</span>
+              <span>Demo intake only</span>
             </div>
           }
         />
@@ -99,7 +99,7 @@ export default function PublicTransparencyPage() {
                   Community Disturbance Report
                 </h2>
               </div>
-              <StatusBadge label="Client-Side Sanitized" variant="verified" size="sm" />
+              <StatusBadge label="Local demonstration" variant="verified" size="sm" />
             </div>
 
             {submittedReceipt ? (
@@ -109,7 +109,7 @@ export default function PublicTransparencyPage() {
                   <span>Observation Submitted (Local Demonstration Receipt)</span>
                 </div>
                 <p className="text-xs text-ink-600 leading-relaxed">
-                  Your report has been queued for verification. Keep this receipt identifier for status tracking:
+                  This is a demonstration receipt. Your observation has not been saved or sent to a forest officer.
                 </p>
 
                 <div className="p-3.5 rounded-control bg-bone border border-sand flex items-center justify-between font-mono text-sm">
@@ -206,11 +206,11 @@ export default function PublicTransparencyPage() {
                     className="btn btn-primary h-11 min-h-[44px] text-xs px-6"
                   >
                     {isSubmitting ? (
-                      <span>Sanitizing &amp; submitting...</span>
+                      <span>Creating demo receipt...</span>
                     ) : (
                       <>
                         <Send className="h-4 w-4" />
-                        <span>Submit anonymous report</span>
+                        <span>Create demo receipt</span>
                       </>
                     )}
                   </button>
@@ -227,13 +227,13 @@ export default function PublicTransparencyPage() {
                 <span>Whistleblower Protection Charter</span>
               </div>
               <p className="text-xs text-ink-600 leading-relaxed">
-                Aranya Sentinel implements client-side metadata stripping before tip-offs reach the dispatch queue:
+                This demonstration does not provide a reporting or anonymous delivery service:
               </p>
               <ul className="space-y-2 text-xs text-ink-900 list-disc list-inside">
-                <li>Zero HTTP referrer logging or tracking pixels</li>
-                <li>EXIF header stripping on any attached imagery</li>
-                <li>Receipt hash generated independently of origin IP</li>
-                <li>Direct routing to the District Forest Officer (DFO)</li>
+                <li>Form entries stay in this page until cleared</li>
+                <li>Image attachments are not supported</li>
+                <li>Receipt identifiers are randomly generated locally</li>
+                <li>No report is routed to a District Forest Officer</li>
               </ul>
             </div>
           </div>

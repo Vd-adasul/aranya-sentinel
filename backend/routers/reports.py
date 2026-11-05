@@ -19,10 +19,12 @@ class ReportItem(BaseModel):
     machinery_detected: List[str]
     sha256_evidence_seal: str
     download_url: str
+    drone_mission_ref: Optional[str] = None
+    drone_image_url: Optional[str] = None
     is_demo: bool = False
 
 @router.get("", response_model=List[ReportItem])
-async def list_reports(include_demo: bool = False):
+async def list_reports(include_demo: bool = True):
     return report_service.list_reports(include_demo=include_demo)
 
 @router.post("/generate/{incident_id}", response_model=ReportItem)
