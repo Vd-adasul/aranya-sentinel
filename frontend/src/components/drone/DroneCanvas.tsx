@@ -380,9 +380,23 @@ export function DroneCanvas({
     setUploadedFile(file);
     setInferenceError(null);
 
-    // Dynamically update canvas background to the uploaded image immediately
-    const objectUrl = URL.createObjectURL(file);
-    setBgImageSrc(objectUrl);
+    // Read and save as persistent Base64 Data URL so it never dies on navigation/refresh
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (dataUrl) {
+        setBgImageSrc(dataUrl);
+        try {
+          localStorage.setItem("aranya_latest_drone_image", dataUrl);
+          if (incidentId) {
+            localStorage.setItem(`aranya_drone_media_${incidentId}`, dataUrl);
+          }
+        } catch (err) {
+          console.warn("Storage quota note:", err);
+        }
+      }
+    };
+    reader.readAsDataURL(file);
 
     setIsInferencing(true);
     const formData = new FormData();

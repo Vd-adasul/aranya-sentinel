@@ -67,7 +67,11 @@ function VerificationContent() {
               : (activeInc.drone_mission_ref.toLowerCase().includes("102") ? "/imagery/terrain-regional.jpg" : null)))
       : null
   );
-  const droneImageSrc = getFullMediaUrl(rawDroneImg);
+  const droneImageSrc =
+    (typeof window !== "undefined" && activeInc?.drone_mission_ref ? localStorage.getItem(`aranya_media_${activeInc.drone_mission_ref}`) : null) ||
+    (typeof window !== "undefined" && activeInc?.id ? localStorage.getItem(`aranya_drone_media_${activeInc.id}`) : null) ||
+    (typeof window !== "undefined" && activeInc?.drone_mission_ref?.startsWith("DRONE-") ? localStorage.getItem("aranya_latest_drone_image") : null) ||
+    getFullMediaUrl(rawDroneImg);
   const hasDroneEvidence = Boolean(
     (activeInc?.drone_mission_ref || droneLayer?.drone_id) &&
     (droneImageSrc || detectedTargets.length > 0)
