@@ -33,6 +33,7 @@ export interface Incident {
   investigation_notes?: string;
   rejection_reason?: string;
   drone_mission_ref?: string;
+  evidence_count?: number;
   disturbances_polygon_id?: string;
 }
 

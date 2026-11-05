@@ -1127,9 +1127,9 @@ function ReportsContent() {
                             );
                           })}
                           <div className="absolute top-2 right-2 px-2 py-0.5 bg-critical/90 text-white font-mono text-[9px] font-bold tracking-wider rounded border border-white/30 z-20 shadow">
-                            {selectedReport.machinery_detected.length > 0
-                              ? `${selectedReport.machinery_detected.length} TARGETS DETECTED`
-                              : (plateDetections.length > 0 ? `${plateDetections.length} TARGETS DETECTED` : "OPTICAL FEED ATTESTED")}
+                            {plateDetections.length > 0
+                              ? `${plateDetections.length} TARGETS DETECTED`
+                              : (selectedReport.machinery_detected.length > 0 ? `${selectedReport.machinery_detected.length} TARGETS DETECTED` : "OPTICAL FEED ATTESTED")}
                           </div>
                           <div className="absolute bottom-2 left-2 right-2 bg-ink-900/85 backdrop-blur-sm text-bone p-2 rounded text-[9px] font-mono flex items-center justify-between border-l-2 border-canopy z-20 shadow">
                             <span>ALT: 120m AGL · RTK GPS: {lat.toFixed(4)}°N, {lng.toFixed(4)}°E</span>
@@ -1214,8 +1214,14 @@ function ReportsContent() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-sand bg-bone font-mono text-[11px]">
-                        {selectedReport.machinery_detected.length > 0 ? (
-                          selectedReport.machinery_detected.map((mach, idx) => (
+                        {(plateDetections.length > 0
+                          ? plateDetections.map((d: any) => d.label || d.class || "Machinery Target")
+                          : selectedReport.machinery_detected
+                        ).length > 0 ? (
+                          (plateDetections.length > 0
+                            ? plateDetections.map((d: any) => d.label || d.class || "Machinery Target")
+                            : selectedReport.machinery_detected
+                          ).map((mach: string, idx: number) => (
                             <tr key={idx} className="hover:bg-paper transition-colors">
                               <td className="py-2.5 px-3 font-bold text-ink-600">0{idx + 1}</td>
                               <td className="py-2.5 px-3 font-sans font-bold text-critical">{mach}</td>
